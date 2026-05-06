@@ -9,11 +9,14 @@ export class SseClient {
   private lastEventId: string | null = null;
   private currentUrl: string | null = null;
   private currentHandlers: SseHandlers | null = null;
+  // Prevents Chrome's onerror-after-clean-close from triggering a reconnect
+  private completedCleanly = false;
 
   connect(url: string, handlers: SseHandlers): void {
     this.currentUrl = url;
     this.currentHandlers = handlers;
     this.attempts = 0;
+    this.completedCleanly = false;
     this._open(url, handlers);
   }
 
@@ -28,6 +31,7 @@ export class SseClient {
     this.currentHandlers = null;
     this.lastEventId = null;
     this.attempts = 0;
+    this.completedCleanly = false;
   }
 
   private _open(url: string, handlers: SseHandlers): void {
@@ -50,6 +54,8 @@ export class SseClient {
     this.es.addEventListener('done', (e: MessageEvent) => {
       const data = JSON.parse(e.data) as { messageId: string };
       this.lastEventId = data.messageId;
+      // Mark clean completion BEFORE closing so Chrome's onerror is ignored
+      this.completedCleanly = true;
       handlers.onDone(data.messageId);
       handlers.onStatusChange('idle');
       this.es?.close();
@@ -70,6 +76,9 @@ export class SseClient {
     };
 
     this.es.onerror = () => {
+      // Chrome fires onerror when the server closes the connection normally after
+      // the 'done' event. Ignore it if the stream already completed cleanly.
+      if (this.completedCleanly) return;
       this.es?.close();
       this.es = null;
       this._scheduleReconnect(handlers);
@@ -86,6 +95,7 @@ export class SseClient {
     const delay = BACKOFF_MS[this.attempts++];
     this.retryTimer = setTimeout(() => {
       if (this.currentUrl && this.currentHandlers) {
+        this.completedCleanly = false;
         this._open(this.currentUrl, this.currentHandlers);
       }
     }, delay);
