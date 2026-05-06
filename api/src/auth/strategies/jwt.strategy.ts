@@ -8,7 +8,11 @@ import { JwtPayload } from '../types/jwt-payload.type';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(config: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // SSE endpoints can't send headers, so also accept ?token= query param
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ExtractJwt.fromUrlQueryParameter('token'),
+      ]),
       secretOrKey: Buffer.from(
         config.getOrThrow<string>('JWT_PUBLIC_KEY_B64'),
         'base64',

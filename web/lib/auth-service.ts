@@ -15,7 +15,22 @@ interface StoredSession {
   tokenFamily: string;
 }
 
-let session: StoredSession | null = null;
+const SESSION_KEY = 'ecommmer_session';
+
+function loadStoredSession(): StoredSession | null {
+  try {
+    const raw = typeof window !== 'undefined' ? sessionStorage.getItem(SESSION_KEY) : null;
+    return raw ? (JSON.parse(raw) as StoredSession) : null;
+  } catch { return null; }
+}
+
+function persistSession(s: StoredSession | null): void {
+  if (typeof window === 'undefined') return;
+  if (s) sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  else sessionStorage.removeItem(SESSION_KEY);
+}
+
+let session: StoredSession | null = loadStoredSession();
 
 export async function login(email: string, password: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
@@ -44,6 +59,7 @@ export async function login(email: string, password: string): Promise<void> {
   });
 
   session = { accessToken: data.accessToken, userId: data.userId, tokenFamily: data.tokenFamily };
+  persistSession(session);
 }
 
 export async function logout(): Promise<void> {
@@ -65,6 +81,7 @@ export async function logout(): Promise<void> {
 
   await fetch('/api/auth/set-cookie', { method: 'DELETE' });
   session = null;
+  persistSession(null);
 }
 
 export async function refreshToken(): Promise<void> {
@@ -92,6 +109,7 @@ export async function refreshToken(): Promise<void> {
   });
 
   session = { accessToken: data.accessToken, userId: data.userId, tokenFamily: data.tokenFamily };
+  persistSession(session);
 }
 
 export function getAccessToken(): string | null {
