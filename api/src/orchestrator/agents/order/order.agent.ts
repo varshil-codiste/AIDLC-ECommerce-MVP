@@ -6,6 +6,7 @@ import { OrderService } from './order.service';
 import { AttentionService } from './attention.service';
 import { CustomerService } from '../customer/customer.service';
 import { ORDER_TOOLS, ORDER_WRITE_TOOLS } from './order.tools';
+import { extractToolCall, stripToolXml } from '../../utils/llm-response';
 import type { IAgent } from '../agent.interface';
 import type {
   AgentInput,
@@ -49,16 +50,10 @@ export class OrderAgent implements IAgent {
         tools: ORDER_TOOLS,
       });
 
-      let toolCall: LlmToolCall | null = null;
-      try {
-        const parsed = JSON.parse(result.content) as { tool_call?: LlmToolCall };
-        if (parsed.tool_call?.name) toolCall = parsed.tool_call;
-      } catch {
-        // Not JSON — plain text response
-      }
+      const toolCall = extractToolCall(result.content);
 
       if (!toolCall) {
-        yield { type: 'text', content: result.content, tokensIn: result.tokensIn, tokensOut: result.tokensOut, costUsd: 0 };
+        yield { type: 'text', content: stripToolXml(result.content), tokensIn: result.tokensIn, tokensOut: result.tokensOut, costUsd: 0 };
         return;
       }
 

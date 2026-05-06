@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { LLM_PROVIDER, type ILlmProvider } from '../llm/llm-provider.interface';
 import { PromptLoaderService } from '../prompts/prompt-loader.service';
+import { extractJson } from '../utils/llm-response';
 import type { IAgent } from './agent.interface';
 import type { AgentInput, AgentName, AgentOutput, TurnBudget } from '../types/orchestrator.types';
 
@@ -28,20 +29,20 @@ export class RouterAgent implements IAgent {
         model: this.llm.modelName,
       });
 
-      const parsed = JSON.parse(result.content) as { agent: string; reason: string };
-      const agentName = (parsed.agent ?? 'noop') as AgentName;
+      const parsed = extractJson<{ agent: string; reason: string }>(result.content);
+      const agentName = ((parsed?.agent) ?? 'noop') as AgentName;
 
       this.logger.log({
         event: 'router.decision',
         agentName,
-        reason: parsed.reason,
+        reason: parsed?.reason ?? '',
         userId: input.user.id,
       });
 
       yield {
         type: 'handoff',
         toAgent: agentName,
-        reason: parsed.reason,
+        reason: parsed?.reason ?? '',
         payload: {},
       };
     } catch (err) {
