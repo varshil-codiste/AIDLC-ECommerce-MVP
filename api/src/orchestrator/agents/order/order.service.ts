@@ -90,8 +90,12 @@ export class OrderService {
         after: { status: newStatus },
       });
       if (newStatus === 'shipped') {
-        await (tx as unknown as { outboxEvent: { create: (args: unknown) => Promise<unknown> } }).outboxEvent.create({
-          data: { type: 'order.shipped', payload: { orderId, trackingNumber: order.trackingNumber } },
+        await tx.agentEvent.create({
+          data: {
+            eventType: 'order.shipped',
+            payload: { orderId, trackingNumber: order.trackingNumber } as Prisma.InputJsonValue,
+            emittedByModule: 'OrderService',
+          },
         });
       }
       this.logger.log({ event: 'tool.call', tool: 'order_update_status', orderId, status: newStatus, actorId, success: true });
@@ -153,8 +157,12 @@ export class OrderService {
         after: { trackingNumber, trackingCarrier: carrier, status: newStatus },
       });
       if (newStatus === 'shipped') {
-        await (tx as unknown as { outboxEvent: { create: (args: unknown) => Promise<unknown> } }).outboxEvent.create({
-          data: { type: 'order.shipped', payload: { orderId, trackingNumber } },
+        await tx.agentEvent.create({
+          data: {
+            eventType: 'order.shipped',
+            payload: { orderId, trackingNumber } as Prisma.InputJsonValue,
+            emittedByModule: 'OrderService',
+          },
         });
       }
       this.logger.log({ event: 'tool.call', tool: 'order_add_tracking', orderId, actorId, success: true });

@@ -139,7 +139,7 @@ export class CheckoutAgent implements IAgent {
                 quantity: i.quantity,
                 lineTotalCents: i.lineTotalCents,
               })),
-              address: result.address,
+              ...(result.address && { address: result.address }),
             },
           };
           return { type: 'widget', widget };

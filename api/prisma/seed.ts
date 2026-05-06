@@ -125,6 +125,24 @@ async function main() {
   }
 
   const merchant = await prisma.user.findUniqueOrThrow({ where: { email: 'merchant@dev.local' } });
+  const shopper = await prisma.user.findUniqueOrThrow({ where: { email: 'shopper@dev.local' } });
+
+  // Default shipping address for shopper
+  const existingAddr = await prisma.address.findFirst({ where: { userId: shopper.id, type: 'shipping' } });
+  if (!existingAddr) {
+    await prisma.address.create({
+      data: {
+        userId: shopper.id,
+        type: 'shipping',
+        line1: '221B Baker Street',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        postalCode: '400001',
+        countryCode: 'IN',
+      },
+    });
+    console.log('seeded shopper shipping address');
+  }
 
   // Categories
   const categoryMap = new Map<string, string>();

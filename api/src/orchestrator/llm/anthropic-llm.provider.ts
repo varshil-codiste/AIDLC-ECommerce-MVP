@@ -36,12 +36,10 @@ export class AnthropicLlmProvider implements ILlmProvider {
   }
 
   async complete(params: LlmParams): Promise<LlmResult> {
-    // Don't re-offer tools on follow-up turns that already have tool results in context,
-    // since the context holds plain-text tool result messages, not structured tool_result blocks.
-    const hasToolHistory = params.context.some(
-      (c) => c.role === 'user' && c.content.startsWith('Tool result for'),
-    );
-    const anthropicTools = (!hasToolHistory && params.tools?.length)
+    // Always offer tools when the agent provided them — Claude chooses tool vs text per turn.
+    // We use plain-text content for context (not structured tool_use/tool_result blocks),
+    // so there's no API-level pairing requirement between turns.
+    const anthropicTools = params.tools?.length
       ? params.tools.map((t) => ({
           name: t.name,
           description: t.description,

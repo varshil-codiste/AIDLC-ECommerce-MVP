@@ -59,11 +59,20 @@ export class CartService {
     }
   }
 
-  async addItem(userId: string, variantId: string, quantity: number): Promise<EnrichedCart> {
+  async addItem(userId: string, variantOrProductId: string, quantity: number): Promise<EnrichedCart> {
     const cart = await this.getOrCreateCart(userId);
 
-    const variant = await this.prisma.productVariant.findUnique({ where: { id: variantId } });
+    // Try as variantId first; if not found, treat as productId and pick first in-stock variant
+    let variant = await this.prisma.productVariant.findUnique({ where: { id: variantOrProductId } });
+    if (!variant) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: variantOrProductId },
+        include: { variants: { orderBy: { stock: 'desc' } } },
+      });
+      if (product?.variants?.length) variant = product.variants.find((v) => v.stock > 0) ?? product.variants[0];
+    }
     if (!variant) throw new Error('cart.variant_not_found');
+    const variantId = variant.id;
 
     const existing = await this.prisma.cartItem.findFirst({ where: { cartId: cart.id, variantId } });
     const newQty = (existing?.quantity ?? 0) + quantity;
