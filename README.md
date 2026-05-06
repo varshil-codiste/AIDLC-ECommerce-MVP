@@ -5,6 +5,8 @@ A **chat-native e-commerce platform** built entirely via the [AI-DLC](https://gi
 Built on: **NestJS 11 + Prisma 6 + PostgreSQL 16 (pgvector) + Next.js 15 + React 19**  
 Delivered in 12 Units of Work — 540 tests, 7 AI agents, 21 accessible widgets.
 
+UI is themed after [Codiste](https://www.codiste.com/) — monochrome dark/light palette, numbered cards with arrow CTAs, premium typography.
+
 ---
 
 ## Feature Overview
@@ -86,11 +88,25 @@ bash scripts/dev.sh
 pnpm --filter api exec tsx prisma/seed.ts
 ```
 
-Creates 1 merchant user, 1 shopper user, 20 products with variants, sample orders.
+Creates 3 users (admin / merchant / shopper), 4 categories, 8 products (16 variants), and a default shipping address for the shopper.
 
 Default credentials (local dev only):
-- Merchant: `merchant@example.com` / `Password1!`
-- Shopper: `shopper@example.com` / `Password1!`
+- Shopper: `shopper@dev.local` / `shopper-dev-passw0rd!`
+- Merchant: `merchant@dev.local` / `merchant-dev-passw0rd!`
+- Admin: `admin@dev.local` / `admin-dev-passw0rd!`
+
+### Try these prompts after login
+
+**Shopper:**
+- `show me phones` · `show me laptops` · `show me headphones`
+- `compare iPhone 15 Pro and Samsung Galaxy S24`
+- `add iPhone 15 Pro to my cart` · `show me my cart`
+- `I want to checkout` → then `pay for cart <cartId>` → `track order <orderId>`
+
+**Merchant:**
+- `what needs my attention?` · `show me low stock items`
+- `show me my notifications` · `show me recent orders`
+- `show me top customers by lifetime value`
 
 ---
 
@@ -142,9 +158,10 @@ docker compose -f docker-compose.prod.yml -f docker-compose.observability.yml up
 | `REDIS_URL` | Redis connection string |
 | `JWT_SECRET` | RS256 private key PEM |
 | `JWT_PUBLIC_KEY` | RS256 public key PEM |
-| `LLM_API_KEY` | OpenAI API key |
-| `LLM_MODEL` | e.g. `gpt-4o` |
-| `EMBEDDING_MODEL` | e.g. `text-embedding-3-small` |
+| `LLM_PROVIDER` | `anthropic` (default) or `openai` |
+| `LLM_API_KEY` | Anthropic API key (`sk-ant-api03-...`) — also set `LLM_PROVIDER_API_KEY` to the same value |
+| `LLM_MODEL` | e.g. `claude-haiku-4-5-20251001` (default) |
+| `EMBEDDING_MODEL` | e.g. `text-embedding-3-small` (used only if `LLM_PROVIDER=openai`) |
 | `SENTRY_DSN` | Sentry project DSN (optional but recommended) |
 | `WEB_ORIGIN` | Production web URL for CORS (e.g. `https://yourdomain.com`) |
 | `ALERT_EMAIL` | Email address for Grafana alert notifications |
@@ -160,13 +177,14 @@ Browser (Next.js 15)
   └─ SSE stream ──────────────────────────────────────────────────────────┐
                                                                            ↓
                                                               NestJS Orchestrator
-                                                              ├── ProductAgent      (OpenAI gpt-4o)
-                                                              ├── OrderAgent        (OpenAI gpt-4o)
-                                                              ├── CustomerAgent     (OpenAI gpt-4o)
-                                                              ├── CartAgent         (OpenAI gpt-4o)
-                                                              ├── CheckoutAgent     (OpenAI gpt-4o)
-                                                              ├── NotificationAgent (OpenAI gpt-4o)
-                                                              └── SearchAgent       (pgvector + text-embedding-3-small)
+                                                              ├── RouterAgent       (intent classification)
+                                                              ├── ProductAgent      (Claude Haiku 4.5, native tool use)
+                                                              ├── OrderAgent        (Claude Haiku 4.5, native tool use)
+                                                              ├── CustomerAgent     (Claude Haiku 4.5, native tool use)
+                                                              ├── CartAgent         (Claude Haiku 4.5, native tool use)
+                                                              ├── CheckoutAgent     (Claude Haiku 4.5, native tool use)
+                                                              ├── NotificationAgent (Claude Haiku 4.5, native tool use)
+                                                              └── NoopAgent         (greetings / fallback)
                                                                            │
                                                              ┌─────────────┴─────────────┐
                                                         PostgreSQL 16              Redis
@@ -174,6 +192,8 @@ Browser (Next.js 15)
 ```
 
 Each agent emits typed **widget payloads** validated against JSON schemas (AJV 8). The SSE client renders them as React components in the chat stream.
+
+**Determinism:** every LLM call uses `temperature: 0`. Combined with tightened router examples (one few-shot per intent class), the same prompt always picks the same agent → same tool → same widget. See `/tmp/regression-test.mjs` (37-case regression suite, ground-truth assertions, N-rep determinism check) for the test harness.
 
 ---
 
@@ -202,8 +222,8 @@ aidlc-docs/
 | ORM | Prisma 6 (multiSchema) |
 | Database | PostgreSQL 16 + pgvector |
 | Cache / Sessions | Redis 7 (ioredis 5.4) |
-| Auth | JWT RS256 via `@nestjs/passport` |
-| LLM Provider | OpenAI (`gpt-4o` + `text-embedding-3-small`) |
+| Auth | JWT RS256 via `@nestjs/passport` (access in memory + refresh httpOnly cookie) |
+| LLM Provider | Anthropic Claude Haiku 4.5 (native tool use, `temperature: 0`) — OpenAI provider also pluggable |
 | Tracing | OpenTelemetry SDK 0.57 |
 | Frontend | Next.js 15 + React 19 (App Router) |
 | Styling | Tailwind CSS |
