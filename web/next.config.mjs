@@ -7,6 +7,11 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'placehold.co' },
+    ],
+  },
   async headers() {
     return [
       {
@@ -19,7 +24,7 @@ const nextConfig = {
               // unsafe-eval required by webpack HMR in dev; removed in production
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data:",
+              "img-src 'self' data: https://placehold.co",
               "connect-src 'self' http://localhost:3001",
               "font-src 'self'",
               "frame-ancestors 'none'",
