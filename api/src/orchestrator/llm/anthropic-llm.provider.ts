@@ -36,6 +36,19 @@ export class AnthropicLlmProvider implements ILlmProvider {
   }
 
   async complete(params: LlmParams): Promise<LlmResult> {
+    // Don't re-offer tools on follow-up turns that already have tool results in context,
+    // since the context holds plain-text tool result messages, not structured tool_result blocks.
+    const hasToolHistory = params.context.some(
+      (c) => c.role === 'user' && c.content.startsWith('Tool result for'),
+    );
+    const anthropicTools = (!hasToolHistory && params.tools?.length)
+      ? params.tools.map((t) => ({
+          name: t.name,
+          description: t.description,
+          input_schema: t.parameters as Anthropic.Tool['input_schema'],
+        }))
+      : undefined;
+
     const response = await this.client.messages.create({
       model: this.modelName,
       max_tokens: params.budget.maxTokensOut,
@@ -47,7 +60,19 @@ export class AnthropicLlmProvider implements ILlmProvider {
         })),
         { role: 'user', content: params.userMessage },
       ],
+      ...(anthropicTools && { tools: anthropicTools }),
     });
+
+    // Native tool_use block → serialize as Format 1 JSON for extractToolCall()
+    const toolUse = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use');
+    if (toolUse) {
+      return {
+        content: JSON.stringify({ tool_call: { name: toolUse.name, arguments: toolUse.input } }),
+        tokensIn: response.usage.input_tokens,
+        tokensOut: response.usage.output_tokens,
+      };
+    }
+
     const content = response.content[0]?.type === 'text' ? response.content[0].text : '';
     return {
       content,

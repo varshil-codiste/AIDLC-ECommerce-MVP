@@ -80,18 +80,17 @@ export class ProductSearchIndexService {
   ): Promise<RankedProductRow[]> {
     const cap = Math.max(1, Math.min(limit, 50));
 
-    const where: Prisma.Sql[] = [
-      Prisma.sql`p."status" = 'active'`,
-      Prisma.sql`psi."tsv" @@ plainto_tsquery('english', ${query})`,
-    ];
-    if (filters.categoryId) where.push(Prisma.sql`p."category_id" = ${filters.categoryId}::uuid`);
-    if (filters.currency) where.push(Prisma.sql`p."currency" = ${filters.currency}`);
+    const filterClauses: Prisma.Sql[] = [Prisma.sql`p."status" = 'active'`];
+    if (filters.categoryId) filterClauses.push(Prisma.sql`p."category_id" = ${filters.categoryId}::uuid`);
+    if (filters.currency) filterClauses.push(Prisma.sql`p."currency" = ${filters.currency}`);
     if (typeof filters.maxPriceCents === 'number') {
-      where.push(Prisma.sql`p."price_cents" <= ${filters.maxPriceCents}`);
+      filterClauses.push(Prisma.sql`p."price_cents" <= ${filters.maxPriceCents}`);
     }
-    const whereClause = Prisma.join(where, ' AND ');
+    const baseFilter = Prisma.join(filterClauses, ' AND ');
 
-    const rows = await this.prisma.$queryRaw<RankedProductRow[]>(Prisma.sql`
+    // Tier 1: full-text TSV search
+    const tsvWhere = Prisma.join([...filterClauses, Prisma.sql`psi."tsv" @@ plainto_tsquery('english', ${query})`], ' AND ');
+    const tsvRows = await this.prisma.$queryRaw<RankedProductRow[]>(Prisma.sql`
       SELECT
         p."id"             AS "id",
         p."title"          AS "title",
@@ -104,10 +103,37 @@ export class ProductSearchIndexService {
         ts_rank(psi."tsv", plainto_tsquery('english', ${query}))::float AS "score"
       FROM "app"."product_search_index" psi
       JOIN "app"."products" p ON p."id" = psi."product_id"
-      WHERE ${whereClause}
+      WHERE ${tsvWhere}
       ORDER BY "score" DESC
       LIMIT ${cap};
     `);
-    return rows;
+    if (tsvRows.length > 0) return tsvRows;
+
+    // Tier 2: ILIKE on title + description + category (handles "phones" → smartphones, "laptop" etc.)
+    const pattern = `%${query.replace(/%/g, '\\%').replace(/_/g, '\\_')}%`;
+    const ilikeRows = await this.prisma.$queryRaw<RankedProductRow[]>(Prisma.sql`
+      SELECT
+        p."id"             AS "id",
+        p."title"          AS "title",
+        p."description"    AS "description",
+        p."price_cents"    AS "priceCents",
+        p."currency"       AS "currency",
+        p."category_id"    AS "categoryId",
+        p."status"         AS "status",
+        p."image_urls"     AS "imageUrls",
+        0.1::float         AS "score"
+      FROM "app"."products" p
+      LEFT JOIN "app"."categories" cat ON cat."id" = p."category_id"
+      WHERE ${baseFilter}
+        AND (
+          p."title" ILIKE ${pattern}
+          OR p."description" ILIKE ${pattern}
+          OR cat."name" ILIKE ${pattern}
+          OR cat."slug" ILIKE ${pattern}
+        )
+      ORDER BY p."title"
+      LIMIT ${cap};
+    `);
+    return ilikeRows;
   }
 }
