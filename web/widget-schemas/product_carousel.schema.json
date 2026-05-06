@@ -14,12 +14,13 @@
           "title": { "type": "string" },
           "priceCents": { "type": "integer", "minimum": 0 },
           "currency": { "type": "string" },
-          "imageUrl": { "type": "string" }
+          "imageUrl": { "type": ["string", "null"] }
         },
         "additionalProperties": false
       }
     },
-    "query": { "type": "string" }
+    "query": { "type": "string" },
+    "usedFallback": { "type": "boolean" }
   },
   "additionalProperties": false
 }

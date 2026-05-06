@@ -146,12 +146,12 @@ export class ProductAgent implements IAgent {
             data: {
               query: args['query'] as string,
               usedFallback,
-              items: products.map((p) => ({
-                id: p.id,
+              products: products.map((p) => ({
+                productId: p.id,
                 title: p.title,
                 priceCents: p.priceCents,
                 currency: p.currency,
-                imageUrl: p.imageUrls?.[0] ?? null,
+                imageUrl: p.imageUrls?.[0] ?? undefined,
               })),
             },
           };

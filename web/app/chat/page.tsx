@@ -19,6 +19,7 @@ export default function ChatPage() {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
   const sseRef = useRef(new SseClient());
   const streamingMsgIdRef = useRef<string | null>(null);
+  const welcomeSentRef = useRef(false);
 
   // Restore session on mount
   useEffect(() => {
@@ -35,16 +36,14 @@ export default function ChatPage() {
     }
   }, [state.messages]);
 
-  // Welcome message / merchant digest on first load
+  // Welcome message on first load — guarded against React StrictMode double-fire
   useEffect(() => {
+    if (welcomeSentRef.current) return;
     const saved = loadSession();
     if (saved.length > 0) return;
-
     const user = getUser();
     if (!user) return;
-
-    // Detect role from token claims via a cheap fetch to /api/v1/auth/me
-    // For now, default to shopper welcome; role is set after session restore
+    welcomeSentRef.current = true;
     dispatch({
       type: 'ADD_ASSISTANT_TEXT',
       id: nextId(),
