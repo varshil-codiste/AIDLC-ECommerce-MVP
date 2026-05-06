@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["items", "generatedAt"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "entityId", "label", "urgencyScore", "metadata"],
+        "properties": {
+          "category": { "type": "string", "enum": ["unfulfilled_order", "low_stock", "pending_refund"] },
+          "entityId": { "type": "string" },
+          "label": { "type": "string" },
+          "urgencyScore": { "type": "number", "minimum": 0, "maximum": 100 },
+          "metadata": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "generatedAt": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,348 @@
+// Prisma schema for the ECommmer-AIDLC api service.
+// Full 15-table schema across app + audit schemas.
+// See aidlc-docs/inception/application-design/data-model.md for the authoritative DDL sketch.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "multiSchema"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector, citext]
+  schemas    = ["app", "audit"]
+}
+
+// ---------------------------------------------------------------------------
+// app schema
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  role         String
+  email        String    @unique @db.Citext
+  passwordHash String    @map("password_hash")
+  name         String?
+  phone        String?
+  status       String    @default("active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz(6)
+
+  addresses       Address[]
+  conversations   Conversation[]
+  orders          Order[]
+  customer        Customer?
+  notifications   Notification[]
+  idempotencyKeys IdempotencyKey[]
+  carts           Cart[]
+  createdProducts Product[]        @relation("ProductCreator")
+
+  @@index([lastActiveAt], map: "users_last_active_at_idx")
+  @@map("users")
+  @@schema("app")
+}
+
+model Address {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  type        String
+  line1       String   @map("line1")
+  line2       String?  @map("line2")
+  city        String
+  state       String
+  postalCode  String   @map("postal_code")
+  countryCode String   @map("country_code")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@map("addresses")
+  @@schema("app")
+}
+
+model Conversation {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  userRole       String    @default("shopper") @map("user_role")
+  title          String?   @db.VarChar(255)
+  startedAt      DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  lastActivityAt DateTime  @default(now()) @map("last_activity_at") @db.Timestamptz(6)
+  closedAt       DateTime? @map("closed_at") @db.Timestamptz(6)
+
+  user     User      @relation(fields: [userId], references: [id])
+  messages Message[]
+
+  @@index([userId, lastActivityAt], map: "conversations_user_last_activity_idx")
+  @@index([lastActivityAt], map: "conversations_last_activity_idx")
+  @@map("conversations")
+  @@schema("app")
+}
+
+model Message {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversationId String    @map("conversation_id") @db.Uuid
+  sender         String
+  senderRole     String?   @map("sender_role")
+  content        String?
+  widgetType     String?   @map("widget_type") @db.VarChar(64)
+  widgetPayload  Json?     @map("widget_payload")
+  agentName      String?   @map("agent_name")
+  tokensIn       Int?      @map("tokens_in")
+  tokensOut      Int?      @map("tokens_out")
+  costUsd        Decimal?  @map("cost_usd") @db.Decimal(12, 6)
+  traceId        String?   @map("trace_id") @db.VarChar(32)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId, createdAt], map: "messages_conversation_created_idx")
+  @@index([createdAt], map: "messages_created_at_idx")
+  @@map("messages")
+  @@schema("app")
+}
+
+model Category {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  slug      String   @unique
+  parentId  String?  @map("parent_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@map("categories")
+  @@schema("app")
+}
+
+model Product {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  description     String?
+  priceCents      Int      @map("price_cents")
+  currency        String   @default("INR")
+  categoryId      String?  @map("category_id") @db.Uuid
+  status          String   @default("active")
+  imageUrls       String[] @map("image_urls")
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  category    Category?          @relation(fields: [categoryId], references: [id])
+  createdBy   User               @relation("ProductCreator", fields: [createdByUserId], references: [id])
+  variants    ProductVariant[]
+  searchIndex ProductSearchIndex?
+
+  @@index([categoryId, status], map: "products_category_status_idx")
+  @@map("products")
+  @@schema("app")
+}
+
+model ProductVariant {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productId         String   @map("product_id") @db.Uuid
+  sku               String   @unique
+  attributes        Json     @default("{}")
+  stock             Int
+  lowStockThreshold Int      @default(5) @map("low_stock_threshold")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  product    Product     @relation(fields: [productId], references: [id])
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId], map: "product_variants_product_id_idx")
+  @@map("product_variants")
+  @@schema("app")
+}
+
+model ProductSearchIndex {
+  productId String                      @id @map("product_id") @db.Uuid
+  embedding Unsupported("vector(1536)")?
+  textBlob  String                      @map("text_blob")
+  tsv       Unsupported("tsvector")?
+  updatedAt DateTime                    @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("product_search_index")
+  @@schema("app")
+}
+
+model Cart {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  status    String   @default("open")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user  User       @relation(fields: [userId], references: [id])
+  items CartItem[]
+
+  // Partial unique index "carts_user_open_idx" added in migration SQL:
+  // UNIQUE (user_id) WHERE status = 'open'
+  @@index([userId], map: "carts_user_id_idx")
+  @@map("carts")
+  @@schema("app")
+}
+
+model CartItem {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cartId    String   @map("cart_id") @db.Uuid
+  variantId String   @map("variant_id") @db.Uuid
+  quantity  Int
+  addedAt   DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
+
+  cart    Cart           @relation(fields: [cartId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@index([cartId], map: "cart_items_cart_id_idx")
+  @@map("cart_items")
+  @@schema("app")
+}
+
+model Order {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  status            String
+  totalCents        Int      @map("total_cents")
+  currency          String   @default("INR")
+  shippingAddressId String?  @map("shipping_address_id") @db.Uuid
+  paymentRef        String?  @map("payment_ref")
+  trackingNumber    String?  @map("tracking_number")
+  trackingCarrier   String?  @map("tracking_carrier")
+  returnReason       String?   @map("return_reason")
+  returnRequestedAt  DateTime? @map("return_requested_at") @db.Timestamptz(6)
+  placedAt          DateTime @default(now()) @map("placed_at") @db.Timestamptz(6)
+  lastStatusChangeAt DateTime @default(now()) @map("last_status_change_at") @db.Timestamptz(6)
+
+  user            User        @relation(fields: [userId], references: [id])
+  shippingAddress Address?    @relation(fields: [shippingAddressId], references: [id])
+  items           OrderItem[]
+
+  @@index([userId, placedAt(sort: Desc)], map: "orders_user_placed_at_idx")
+  @@index([status], map: "orders_status_idx")
+  @@map("orders")
+  @@schema("app")
+}
+
+model OrderItem {
+  id                   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId              String @map("order_id") @db.Uuid
+  variantId            String @map("variant_id") @db.Uuid
+  quantity             Int
+  priceAtPurchaseCents Int    @map("price_at_purchase_cents")
+
+  order   Order          @relation(fields: [orderId], references: [id])
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@index([orderId], map: "order_items_order_id_idx")
+  @@map("order_items")
+  @@schema("app")
+}
+
+model Customer {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @unique @map("user_id") @db.Uuid
+  tags       String[] @default([])
+  segments   String[] @default([])
+  ltvCents   Int      @default(0) @map("ltv_cents")
+  orderCount Int      @default(0) @map("order_count")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("customers")
+  @@schema("app")
+}
+
+model Notification {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientUserId String    @map("recipient_user_id") @db.Uuid
+  type            String
+  payload         Json
+  readAt          DateTime? @map("read_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  recipient User @relation(fields: [recipientUserId], references: [id])
+
+  @@index([recipientUserId, readAt], map: "notifications_recipient_read_idx")
+  @@map("notifications")
+  @@schema("app")
+}
+
+model AgentEvent {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventType           String    @map("event_type")
+  payload             Json
+  emittedByModule     String    @map("emitted_by_module")
+  consumedBy          String[]  @default([]) @map("consumed_by")
+  committedToStreamAt DateTime? @map("committed_to_stream_at") @db.Timestamptz(6)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Partial index "agent_events_pending_idx" added in migration SQL:
+  // CREATE INDEX ON agent_events (created_at) WHERE committed_to_stream_at IS NULL
+  @@map("agent_events")
+  @@schema("app")
+}
+
+model LlmCostRecord {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  traceId     String   @map("trace_id")
+  spanId      String   @map("span_id")
+  model       String
+  agentModule String?  @map("agent_module")
+  inputTokens Int      @map("input_tokens")
+  outputTokens Int     @map("output_tokens")
+  costUsd     Decimal  @map("cost_usd") @db.Decimal(10, 6)
+  calledAt    DateTime @map("called_at") @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([calledAt], map: "llm_cost_records_called_at_idx")
+  @@map("llm_cost_records")
+  @@schema("app")
+}
+
+model IdempotencyKey {
+  key                String   @id
+  userId             String   @map("user_id") @db.Uuid
+  requestFingerprint String   @map("request_fingerprint")
+  responseStatus     Int      @map("response_status")
+  responseBody       Json     @map("response_body")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt], map: "idempotency_keys_created_at_idx")
+  @@map("idempotency_keys")
+  @@schema("app")
+}
+
+// ---------------------------------------------------------------------------
+// audit schema — append-only; audit_writer_role INSERT only
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  actorRole   String?  @map("actor_role")
+  action      String
+  entity      String
+  entityId    String   @map("entity_id") @db.Uuid
+  before      Json?
+  after       Json?
+  requestId   String?  @map("request_id")
+  traceId     String?  @map("trace_id")
+  spanId      String?  @map("span_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([entity, entityId, createdAt(sort: Desc)], map: "audit_log_entity_id_idx")
+  @@map("audit_log")
+  @@schema("audit")
+}

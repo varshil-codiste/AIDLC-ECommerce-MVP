@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["customerId", "email", "ltvCents", "currency", "orderCount", "tags"],
+      "properties": {
+        "customerId": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": ["string", "null"] },
+        "ltvCents": { "type": "integer", "minimum": 0 },
+        "currency": { "type": "string" },
+        "orderCount": { "type": "integer", "minimum": 0 },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "anonymized": { "type": "boolean" },
+        "viewDetailAction": {
+          "type": "object",
+          "required": ["intent"],
+          "properties": { "intent": { "type": "string" } }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["customers"],
+      "properties": {
+        "customers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["customerId", "email", "ltvCents", "currency", "orderCount", "tags"],
+            "properties": {
+              "customerId": { "type": "string" },
+              "email": { "type": "string" },
+              "name": { "type": ["string", "null"] },
+              "ltvCents": { "type": "integer", "minimum": 0 },
+              "currency": { "type": "string" },
+              "orderCount": { "type": "integer", "minimum": 0 },
+              "tags": { "type": "array", "items": { "type": "string" } },
+              "anonymized": { "type": "boolean" }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

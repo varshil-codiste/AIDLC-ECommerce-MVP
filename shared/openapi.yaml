@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: ECommmer-AIDLC API
+  version: 0.0.0
+  description: |
+    Source-of-truth REST contract for the Chat-Native E-Commerce Platform.
+    UoW-01 defines /health. UoW-02 adds /auth/* endpoints.
+  contact:
+    name: Codiste
+    email: chintan.p@codiste.com
+servers:
+  - url: http://localhost:3001
+    description: Local dev
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/auth/login:
+    post:
+      summary: Authenticate with email + password
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials or account disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Too many failed attempts — 15-min lockout active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/auth/refresh:
+    post:
+      summary: Rotate refresh token and issue new access token
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Refresh token expired, invalid, or reuse detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /api/v1/auth/logout:
+    post:
+      summary: Revoke the current refresh token family
+      operationId: logout
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Token revoked
+        '401':
+          description: Access token missing or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, ts]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        ts:
+          type: string
+          format: date-time
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 12
+
+    LoginResponse:
+      type: object
+      required: [accessToken, refreshToken, tokenFamily, userId]
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived RS256 JWT (15-min TTL); send as Authorization Bearer header
+        refreshToken:
+          type: string
+          description: Opaque UUID; store in HttpOnly cookie via BFF set-cookie route
+        tokenFamily:
+          type: string
+          format: uuid
+          description: Logical rotation family; include on refresh and logout
+        userId:
+          type: string
+          format: uuid
+
+    RefreshRequest:
+      type: object
+      required: [userId, tokenFamily, refreshToken]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        tokenFamily:
+          type: string
+          format: uuid
+        refreshToken:
+          type: string
+
+    LogoutRequest:
+      type: object
+      required: [tokenFamily, refreshToken]
+      properties:
+        tokenFamily:
+          type: string
+          format: uuid
+        refreshToken:
+          type: string
+
+    Problem:
+      description: RFC 7807 problem+json error envelope.
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        request_id: { type: string }
+        trace_id: { type: string }
+        error_code: { type: string }

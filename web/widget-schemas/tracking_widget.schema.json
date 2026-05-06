@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["orderId", "status", "events"],
+  "properties": {
+    "orderId": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "confirmed", "shipped", "delivered", "cancelled", "refunded", "return_requested"]
+    },
+    "trackingNumber": { "type": ["string", "null"] },
+    "trackingCarrier": { "type": ["string", "null"] },
+    "events": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["label", "timestamp"],
+        "properties": {
+          "label": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "detail": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

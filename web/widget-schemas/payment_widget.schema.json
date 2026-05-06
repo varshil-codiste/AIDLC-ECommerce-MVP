@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "payment_widget",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cartId", "totalCents", "currency", "items"],
+  "properties": {
+    "cartId": { "type": "string" },
+    "totalCents": { "type": "integer", "minimum": 0 },
+    "currency": { "type": "string" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "variantLabel", "quantity", "lineTotalCents"],
+        "properties": {
+          "title": { "type": "string" },
+          "variantLabel": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "lineTotalCents": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "address": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["line1", "city", "state", "postalCode", "countryCode"],
+      "properties": {
+        "id": { "type": "string" },
+        "line1": { "type": "string" },
+        "line2": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "countryCode": { "type": "string" }
+      }
+    }
+  }
+}

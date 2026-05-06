@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["message", "confirmIntent"],
+  "properties": {
+    "message": { "type": "string" },
+    "confirmIntent": { "type": "object", "additionalProperties": true },
+    "cancelIntent": { "type": "object", "additionalProperties": true },
+    "confirmLabel": { "type": "string", "default": "Confirm" },
+    "cancelLabel": { "type": "string", "default": "Cancel" }
+  },
+  "additionalProperties": false
+}

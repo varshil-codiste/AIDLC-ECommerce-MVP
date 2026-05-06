@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "cart_summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cartId", "items", "totalCents", "currency", "itemCount"],
+  "properties": {
+    "cartId": { "type": "string" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["itemId", "variantId", "title", "variantLabel", "priceCents", "currency", "quantity", "lineTotalCents"],
+        "properties": {
+          "itemId": { "type": "string" },
+          "variantId": { "type": "string" },
+          "title": { "type": "string" },
+          "variantLabel": { "type": "string" },
+          "priceCents": { "type": "integer", "minimum": 0 },
+          "currency": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 0 },
+          "lineTotalCents": { "type": "integer", "minimum": 0 },
+          "imageUrl": { "type": "string" }
+        }
+      }
+    },
+    "totalCents": { "type": "integer", "minimum": 0 },
+    "currency": { "type": "string" },
+    "itemCount": { "type": "integer", "minimum": 0 }
+  }
+}

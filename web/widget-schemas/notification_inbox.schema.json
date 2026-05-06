@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["notifications", "unreadCount"],
+  "properties": {
+    "notifications": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "message", "read", "createdAt"],
+        "properties": {
+          "id": { "type": "string" },
+          "type": { "type": "string", "enum": ["order.created", "low_stock"] },
+          "message": { "type": "string" },
+          "read": { "type": "boolean" },
+          "createdAt": { "type": "string" },
+          "payload": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "unreadCount": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["mode", "product", "confirmAction"],
+  "properties": {
+    "mode": { "type": "string", "enum": ["create", "update"] },
+    "product": {
+      "type": "object",
+      "required": ["title", "priceCents", "stock"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "priceCents": { "type": "integer", "minimum": 1 },
+        "currency": { "type": "string" },
+        "stock": { "type": "integer", "minimum": 0 },
+        "description": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "imageUrls": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "diff": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "from", "to"],
+        "properties": {
+          "field": { "type": "string" },
+          "from": {},
+          "to": {}
+        }
+      }
+    },
+    "missingFields": { "type": "array", "items": { "type": "string" } },
+    "confirmAction": {
+      "type": "object",
+      "required": ["intent"],
+      "properties": { "intent": { "type": "string" } }
+    },
+    "editMoreAction": {
+      "type": "object",
+      "required": ["intent"],
+      "properties": { "intent": { "type": "string" } }
+    }
+  },
+  "additionalProperties": false
+}

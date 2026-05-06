@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["orders", "totalCount"],
+  "properties": {
+    "orders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["orderId", "status", "totalCents", "currency", "placedAt", "items"],
+        "properties": {
+          "orderId": { "type": "string" },
+          "status": { "type": "string" },
+          "totalCents": { "type": "integer", "minimum": 0 },
+          "currency": { "type": "string" },
+          "placedAt": { "type": "string" },
+          "items": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    },
+    "totalCount": { "type": "integer", "minimum": 0 },
+    "filters": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "dateFrom": { "type": "string" },
+        "dateTo": { "type": "string" }
+      }
+    },
+    "bulkActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "intent"],
+        "properties": {
+          "label": { "type": "string" },
+          "intent": { "type": "string" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

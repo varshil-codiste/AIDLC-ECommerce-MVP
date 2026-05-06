@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["updatedCount", "failedCount", "status", "orders"],
+  "properties": {
+    "updatedCount": { "type": "integer", "minimum": 0 },
+    "failedCount": { "type": "integer", "minimum": 0 },
+    "status": { "type": "string" },
+    "orders": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": ["orderId", "result"],
+        "properties": {
+          "orderId": { "type": "string" },
+          "title": { "type": "string" },
+          "result": { "type": "string", "enum": ["success", "failed"] },
+          "error": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
