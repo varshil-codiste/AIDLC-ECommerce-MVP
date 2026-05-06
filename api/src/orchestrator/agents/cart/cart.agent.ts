@@ -3,6 +3,7 @@ import { trace } from '@opentelemetry/api';
 import { LLM_PROVIDER, type ILlmProvider } from '../../llm/llm-provider.interface';
 import { PromptLoaderService } from '../../prompts/prompt-loader.service';
 import { CartService } from './cart.service';
+import { ProductService } from '../product/product.service';
 import { CART_TOOLS, CART_WRITE_TOOLS } from './cart.tools';
 import { extractToolCall, stripToolXml } from '../../utils/llm-response';
 import type { IAgent } from '../agent.interface';
@@ -25,6 +26,7 @@ export class CartAgent implements IAgent {
     @Inject(LLM_PROVIDER) private readonly llm: ILlmProvider,
     private readonly promptLoader: PromptLoaderService,
     private readonly cartService: CartService,
+    private readonly productService: ProductService,
   ) {}
 
   async *execute(input: AgentInput): AsyncIterable<AgentOutput> {
@@ -140,6 +142,14 @@ export class CartAgent implements IAgent {
 
     try {
       switch (toolCall.name) {
+        case 'product_search': {
+          const { products } = await this.productService.search(args['query'] as string, {}, 8);
+          return {
+            type: 'data',
+            data: products.map((p) => ({ productId: p.id, title: p.title, priceCents: p.priceCents, currency: p.currency })),
+          };
+        }
+
         case 'cart_get': {
           const cart = await this.cartService.getEnrichedCart(userId);
           const widget: WidgetPayload = { type: 'cart_summary', data: buildCartSummaryData(cart) };

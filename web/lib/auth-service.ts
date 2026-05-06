@@ -60,6 +60,11 @@ export async function login(email: string, password: string): Promise<void> {
 
   session = { accessToken: data.accessToken, userId: data.userId, tokenFamily: data.tokenFamily };
   persistSession(session);
+
+  // Clear any prior user's chat history so a new login starts fresh
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('chat_messages');
+  }
 }
 
 export async function logout(): Promise<void> {
@@ -82,6 +87,11 @@ export async function logout(): Promise<void> {
   await fetch('/api/auth/set-cookie', { method: 'DELETE' });
   session = null;
   persistSession(null);
+
+  // Clear chat history so the next user starts fresh
+  if (typeof window !== 'undefined') {
+    sessionStorage.removeItem('chat_messages');
+  }
 }
 
 export async function refreshToken(): Promise<void> {

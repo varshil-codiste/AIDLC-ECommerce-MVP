@@ -2,13 +2,24 @@ import type { LlmTool } from '../../types/orchestrator.types';
 
 export const CART_TOOLS: LlmTool[] = [
   {
+    name: 'product_search',
+    description: 'Find a product by natural-language name to resolve its UUID. Use this BEFORE cart_add if the user gave a product NAME (e.g. "iPhone 15 Pro") instead of a UUID. Returns up to 8 matches.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Product name to search for.' },
+      },
+      required: ['query'],
+    },
+  },
+  {
     name: 'cart_get',
     description: 'Get the current open cart for the authenticated shopper.',
     parameters: { type: 'object', properties: {}, required: [] },
   },
   {
     name: 'cart_add',
-    description: 'Add a product to the cart. Pass a UUID — it can be either a product variant ID (preferred) OR a product ID (the first available variant is used). If the variant is already in the cart its quantity is incremented.',
+    description: 'Add a product to the cart. Pass a UUID — it can be either a product variant ID OR a product ID (the first available variant is used). If you only have a product NAME, call product_search first to get its UUID. If the variant is already in the cart its quantity is incremented.',
     parameters: {
       type: 'object',
       properties: {
