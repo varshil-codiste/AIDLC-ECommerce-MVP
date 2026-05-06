@@ -27,7 +27,11 @@ interface Props {
 }
 
 function formatCents(cents: number, currency: string): string {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency, minimumFractionDigits: 2 }).format(cents / 100);
+  try {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency, minimumFractionDigits: 0 }).format(cents / 100);
+  } catch {
+    return `${currency} ${(cents / 100).toFixed(2)}`;
+  }
 }
 
 export function CartSummary({ data, onIntent }: Props) {
@@ -36,8 +40,8 @@ export function CartSummary({ data, onIntent }: Props) {
 
   if (!items || items.length === 0) {
     return (
-      <div data-testid="cart-summary-root" className="rounded border border-gray-200 p-4 text-sm space-y-3">
-        <p role="status" data-testid="cart-summary-empty" className="text-gray-500 text-center py-4">
+      <div data-testid="cart-summary-root" className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <p role="status" data-testid="cart-summary-empty" className="text-neutral-500 text-center text-sm">
           Your cart is empty
         </p>
       </div>
@@ -45,28 +49,33 @@ export function CartSummary({ data, onIntent }: Props) {
   }
 
   return (
-    <div data-testid="cart-summary-root" className="rounded border border-gray-200 p-4 text-sm space-y-3">
-      <div className="flex items-center justify-between text-xs text-gray-500 font-medium uppercase tracking-wide">
-        <span>Cart</span>
-        <span data-testid="cart-summary-item-count">{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+    <div data-testid="cart-summary-root" className="rounded-2xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
+      {/* Header — Codiste-style with numbered label */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-100 bg-neutral-50/50">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-mono text-neutral-400 tracking-wider">CART</span>
+        </div>
+        <span data-testid="cart-summary-item-count" className="text-xs font-medium text-neutral-500 bg-white border border-neutral-200 rounded-full px-2.5 py-0.5">
+          {itemCount} item{itemCount !== 1 ? 's' : ''}
+        </span>
       </div>
 
-      <ul className="divide-y divide-gray-100">
+      <ul className="divide-y divide-neutral-100">
         {items.map((item, n) => (
-          <li key={item.itemId} data-testid={`cart-summary-item-${n}`} className="py-2 flex gap-3">
+          <li key={item.itemId} data-testid={`cart-summary-item-${n}`} className="px-5 py-4 flex gap-3 items-start">
             <div data-testid={`cart-summary-item-${n}-image`} className="flex-shrink-0">
-              <ProductImage src={item.imageUrl} alt={item.title} className="w-12 h-12" />
+              <ProductImage src={item.imageUrl} alt={item.title} className="w-14 h-14" />
             </div>
             <div className="flex-1 min-w-0">
-              <div data-testid={`cart-summary-item-${n}-title`} className="font-medium truncate">
+              <div data-testid={`cart-summary-item-${n}-title`} className="font-semibold text-neutral-900 truncate">
                 {item.title}
               </div>
-              <div className="text-xs text-gray-500">{item.variantLabel}</div>
-              <div className="flex items-center justify-between mt-1">
-                <div className="flex items-center gap-1">
+              <div className="text-xs text-neutral-500 mb-2">{item.variantLabel}</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
                   <button
                     data-testid={`cart-summary-item-${n}-qty-dec`}
-                    className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
+                    className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-neutral-700 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-neutral-900"
                     aria-label={`Decrease quantity of ${item.title}`}
                     onClick={() => {
                       if (item.quantity <= 1) {
@@ -76,25 +85,25 @@ export function CartSummary({ data, onIntent }: Props) {
                       }
                     }}
                   >
-                    −
+                    <span className="text-sm">−</span>
                   </button>
-                  <span data-testid={`cart-summary-item-${n}-qty`} className="w-6 text-center text-xs font-medium">
+                  <span data-testid={`cart-summary-item-${n}-qty`} className="w-7 text-center text-sm font-semibold tabular-nums">
                     {item.quantity}
                   </span>
                   <button
                     data-testid={`cart-summary-item-${n}-qty-inc`}
-                    className="w-6 h-6 rounded border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
+                    className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-neutral-700 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-neutral-900"
                     aria-label={`Increase quantity of ${item.title}`}
                     onClick={() => onIntent?.({ intent: 'cart.update_quantity', itemId: item.itemId, quantity: item.quantity + 1 })}
                   >
-                    +
+                    <span className="text-sm">+</span>
                   </button>
                 </div>
                 <div className="text-right">
-                  <div data-testid={`cart-summary-item-${n}-price`} className="text-xs text-gray-400">
+                  <div data-testid={`cart-summary-item-${n}-price`} className="text-[11px] text-neutral-400">
                     {formatCents(item.priceCents, item.currency)} each
                   </div>
-                  <div data-testid={`cart-summary-item-${n}-line-total`} className="font-medium">
+                  <div data-testid={`cart-summary-item-${n}-line-total`} className="font-semibold text-neutral-900 tabular-nums">
                     {formatCents(item.lineTotalCents, item.currency)}
                   </div>
                 </div>
@@ -104,22 +113,27 @@ export function CartSummary({ data, onIntent }: Props) {
         ))}
       </ul>
 
-      <div className="border-t border-gray-200 pt-2 flex items-center justify-between font-semibold">
-        <span>Total</span>
-        <span data-testid="cart-summary-total">{formatCents(totalCents, currency)}</span>
+      <div className="px-5 py-4 border-t border-neutral-100 flex items-center justify-between">
+        <span className="text-xs uppercase tracking-wider text-neutral-500 font-semibold">Total</span>
+        <span data-testid="cart-summary-total" className="text-xl font-bold text-neutral-900 tabular-nums">
+          {formatCents(totalCents, currency)}
+        </span>
       </div>
 
-      <div className="flex gap-2 pt-1">
+      <div className="px-5 pb-5 flex gap-2">
         <button
           data-testid="cart-summary-checkout-btn"
-          className="flex-1 bg-gray-900 text-white rounded py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+          className="flex-1 inline-flex items-center justify-center gap-2 bg-neutral-900 text-white rounded-full py-2.5 text-sm font-medium hover:bg-neutral-700 transition focus:outline-none focus:ring-2 focus:ring-neutral-900"
           onClick={() => onIntent?.({ intent: 'cart.checkout', cartId })}
         >
           Checkout
+          <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
         </button>
         <button
           data-testid="cart-summary-clear-btn"
-          className="px-3 rounded border border-gray-300 text-gray-600 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+          className="px-4 rounded-full border border-neutral-300 text-neutral-700 text-sm hover:border-neutral-900 hover:bg-neutral-50 transition focus:outline-none focus:ring-2 focus:ring-neutral-900"
           onClick={() => onIntent?.({ intent: 'cart.clear' })}
         >
           Clear

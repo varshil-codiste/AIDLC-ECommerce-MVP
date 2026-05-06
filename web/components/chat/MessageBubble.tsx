@@ -9,18 +9,16 @@ interface Props {
 
 function AssistantAvatar() {
   return (
-    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-sm">
-      <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white" stroke="currentColor" strokeWidth="2.5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-      </svg>
+    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neutral-900 flex items-center justify-center">
+      <span className="text-white font-bold text-xs tracking-tight">C</span>
     </div>
   );
 }
 
 function UserAvatar() {
   return (
-    <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center">
-      <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-gray-600" stroke="currentColor" strokeWidth="2">
+    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-neutral-300 flex items-center justify-center">
+      <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-neutral-600" stroke="currentColor" strokeWidth="2">
         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.5 20.25a7.5 7.5 0 0 1 15 0v.75H4.5v-.75Z" />
       </svg>
     </div>
@@ -41,14 +39,14 @@ export function MessageBubble({ message }: Props) {
       <div
         className={clsx(
           'text-sm leading-relaxed',
-          isWidget ? 'max-w-[88%] sm:max-w-[80%] flex-1' : 'max-w-[85%] sm:max-w-[78%]',
+          isWidget ? 'max-w-[88%] sm:max-w-[82%] flex-1' : 'max-w-[85%] sm:max-w-[78%]',
           isUser
-            ? 'rounded-2xl rounded-tr-sm bg-gradient-to-br from-indigo-600 to-violet-600 text-white px-4 py-2.5 shadow-sm'
+            ? 'rounded-2xl rounded-tr-sm bg-neutral-900 text-white px-4 py-2.5 shadow-sm'
             : isError
               ? 'rounded-2xl rounded-tl-sm bg-red-50 border border-red-200 text-red-700 px-4 py-2.5'
               : isWidget
                 ? '' // widget renders its own card; no outer bubble
-                : 'rounded-2xl rounded-tl-sm bg-white border border-gray-200 text-gray-800 px-4 py-2.5 shadow-sm',
+                : 'rounded-2xl rounded-tl-sm bg-white border border-neutral-200 text-neutral-800 px-4 py-2.5 shadow-sm',
         )}
       >
         {isWidget ? (

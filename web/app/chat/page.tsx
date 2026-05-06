@@ -16,6 +16,36 @@ function nextId(): string {
   return `msg-${Date.now()}-${++_msgCounter}`;
 }
 
+function CodisteLogo() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-8 h-8 rounded-full bg-white text-neutral-900 flex items-center justify-center font-bold text-sm tracking-tight">
+        C
+      </div>
+      <div className="leading-tight">
+        <div className="text-sm font-semibold text-white tracking-tight">Codiste Commerce</div>
+        <div className="text-[11px] text-neutral-400">AI Shopping Studio</div>
+      </div>
+    </div>
+  );
+}
+
+function PillButton({ children, onClick, variant = 'dark', testId }: { children: React.ReactNode; onClick: () => void; variant?: 'dark' | 'light'; testId?: string }) {
+  const cls = variant === 'dark'
+    ? 'bg-white text-neutral-900 hover:bg-neutral-100'
+    : 'bg-neutral-900 text-white hover:bg-neutral-800';
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid={testId}
+      className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-white/40 ${cls}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function ChatPage() {
   const router = useRouter();
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
@@ -35,9 +65,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!authChecked) return;
     const saved = loadSession();
-    if (saved.length > 0) {
-      dispatch({ type: 'RESTORE_MESSAGES', messages: saved });
-    }
+    if (saved.length > 0) dispatch({ type: 'RESTORE_MESSAGES', messages: saved });
   }, [authChecked]);
 
   useEffect(() => {
@@ -55,7 +83,7 @@ export default function ChatPage() {
     dispatch({
       type: 'ADD_ASSISTANT_TEXT',
       id: nextId(),
-      content: "Hi! I'm your shopping assistant. What are you looking for today?",
+      content: "Hi — I'm your shopping assistant. What are you looking for today?",
     });
   }, [authChecked]);
 
@@ -67,7 +95,6 @@ export default function ChatPage() {
   const handleSubmit = useCallback((text: string) => {
     const userMsgId = nextId();
     dispatch({ type: 'ADD_USER_MESSAGE', id: userMsgId, content: text });
-
     const streamingMsgId = nextId();
     streamingMsgIdRef.current = streamingMsgId;
     dispatch({ type: 'START_STREAMING', messageId: streamingMsgId });
@@ -102,58 +129,49 @@ export default function ChatPage() {
     router.replace('/login');
   }, [router]);
 
-  const handlePromptClick = useCallback((prompt: string) => {
-    handleSubmit(prompt);
-  }, [handleSubmit]);
-
   if (!authChecked) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
-        <div className="text-gray-500 text-sm">Loading…</div>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-screen bg-neutral-50 text-neutral-500 text-sm">Loading…</div>;
   }
 
+  const SUGGESTED = [
+    'show me phones',
+    'compare iPhone 15 Pro and Samsung Galaxy S24',
+    'show me laptops under ₹1,00,000',
+    'what categories do you have?',
+  ];
+
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
+    <div className="flex flex-col h-screen bg-neutral-50">
+      {/* Dark Codiste-style header */}
+      <header className="bg-neutral-900 text-white">
+        <div className="mx-auto max-w-5xl px-6 py-3.5 flex items-center justify-between">
+          <CodisteLogo />
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-sm">
-              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+            <span className="hidden sm:inline text-xs text-neutral-400">Signed in</span>
+            <PillButton onClick={handleLogout} variant="dark" testId="logout-button">
+              Logout
+              <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
               </svg>
-            </div>
-            <div>
-              <div className="text-base font-semibold text-gray-900 leading-tight">Codiste Commerce</div>
-              <div className="text-xs text-gray-500">AI-powered shopping assistant</div>
-            </div>
+            </PillButton>
           </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            data-testid="logout-button"
-          >
-            Logout
-          </button>
         </div>
       </header>
 
-      {/* Message area + suggested prompts */}
+      {/* Conversation */}
       <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-hidden mx-auto max-w-4xl w-full px-2 sm:px-6">
+        <div className="flex-1 overflow-hidden mx-auto max-w-5xl w-full px-3 sm:px-6">
           <MessageList messages={state.messages} streaming={state.streaming} />
         </div>
         {state.messages.length <= 1 && !state.streaming ? (
-          <div className="mx-auto max-w-4xl w-full px-2 sm:px-6 pb-2">
+          <div className="mx-auto max-w-5xl w-full px-3 sm:px-6 pb-3">
+            <div className="text-[11px] uppercase tracking-wider text-neutral-500 mb-2 font-semibold">Try one of these</div>
             <div className="flex flex-wrap gap-2">
-              {['show me phones', 'compare iPhone 15 Pro and Samsung Galaxy S24', 'show me laptops', 'what categories do you have?'].map((p) => (
+              {SUGGESTED.map((p) => (
                 <button
                   key={p}
-                  onClick={() => handlePromptClick(p)}
-                  className="text-xs rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition"
+                  onClick={() => handleSubmit(p)}
+                  className="text-xs rounded-full border border-neutral-300 bg-white px-3.5 py-1.5 text-neutral-800 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white transition"
                 >
                   {p}
                 </button>
@@ -164,8 +182,8 @@ export default function ChatPage() {
       </div>
 
       {/* Composer */}
-      <div className="border-t border-gray-200 bg-white">
-        <div className="mx-auto max-w-4xl">
+      <div className="border-t border-neutral-200 bg-white">
+        <div className="mx-auto max-w-5xl">
           <Composer disabled={state.composerDisabled} onSubmit={handleSubmit} />
         </div>
       </div>

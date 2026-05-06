@@ -6,26 +6,22 @@ interface Props {
   src?: string | null;
   alt: string;
   className?: string;
-  // Roughly square; sizes via CSS class
 }
 
-// Deterministic gradient palette per title — always renders cleanly even when
-// the upstream image (placehold.co etc.) fails or is slow.
-const GRADIENTS = [
-  ['from-indigo-500', 'to-blue-600'],
-  ['from-violet-500', 'to-fuchsia-600'],
-  ['from-cyan-500', 'to-sky-600'],
-  ['from-emerald-500', 'to-teal-600'],
-  ['from-rose-500', 'to-pink-600'],
-  ['from-amber-500', 'to-orange-600'],
-  ['from-slate-700', 'to-gray-900'],
+// Monochrome / charcoal palette matching the Codiste aesthetic — dark cards with
+// subtle warm accents instead of saturated rainbow gradients.
+const PALETTES = [
+  { from: 'from-neutral-900', to: 'to-neutral-700' },
+  { from: 'from-stone-800', to: 'to-stone-600' },
+  { from: 'from-zinc-900', to: 'to-zinc-700' },
+  { from: 'from-slate-900', to: 'to-slate-700' },
+  { from: 'from-neutral-800', to: 'to-stone-600' },
 ];
 
-function pickGradient(seed: string): string {
+function pickPalette(seed: string) {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  const [a, b] = GRADIENTS[h % GRADIENTS.length];
-  return `bg-gradient-to-br ${a} ${b}`;
+  return PALETTES[h % PALETTES.length];
 }
 
 function initials(name: string): string {
@@ -38,10 +34,10 @@ function initials(name: string): string {
 export function ProductImage({ src, alt, className = 'w-full h-32' }: Props) {
   const [errored, setErrored] = useState(false);
   const useFallback = !src || errored;
-  const gradient = pickGradient(alt);
+  const { from, to } = pickPalette(alt);
 
   return (
-    <div className={`relative overflow-hidden rounded-lg ${gradient} ${className}`}>
+    <div className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${from} ${to} ${className}`}>
       {!useFallback && src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -54,9 +50,13 @@ export function ProductImage({ src, alt, className = 'w-full h-32' }: Props) {
       ) : null}
       {useFallback ? (
         <div className="absolute inset-0 flex items-center justify-center text-white">
-          <span className="text-xl font-semibold tracking-wide drop-shadow-sm">{initials(alt)}</span>
+          <span className="text-xl font-semibold tracking-wide">{initials(alt)}</span>
         </div>
       ) : null}
+      {/* Codiste-style geometric accent — subtle */}
+      {useFallback && (
+        <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full bg-white/5" />
+      )}
     </div>
   );
 }
