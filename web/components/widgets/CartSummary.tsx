@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import type { WidgetIntent } from '@/lib/types/chat.types';
+import { ProductImage } from './ProductImage';
 
 interface CartItem {
   itemId: string;
@@ -54,16 +54,9 @@ export function CartSummary({ data, onIntent }: Props) {
       <ul className="divide-y divide-gray-100">
         {items.map((item, n) => (
           <li key={item.itemId} data-testid={`cart-summary-item-${n}`} className="py-2 flex gap-3">
-            {item.imageUrl ? (
-              <Image
-                data-testid={`cart-summary-item-${n}-image`}
-                src={item.imageUrl}
-                alt={item.title}
-                width={48}
-                height={48}
-                className="rounded object-cover flex-shrink-0"
-              />
-            ) : null}
+            <div data-testid={`cart-summary-item-${n}-image`} className="flex-shrink-0">
+              <ProductImage src={item.imageUrl} alt={item.title} className="w-12 h-12" />
+            </div>
             <div className="flex-1 min-w-0">
               <div data-testid={`cart-summary-item-${n}-title`} className="font-medium truncate">
                 {item.title}

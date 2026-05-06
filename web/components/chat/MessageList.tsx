@@ -32,7 +32,7 @@ export function MessageList({ messages, streaming }: Props) {
     <div
       ref={listRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+      className="flex-1 overflow-y-auto py-6 space-y-4"
       aria-live="polite"
       aria-busy={streaming}
       aria-label="Chat messages"

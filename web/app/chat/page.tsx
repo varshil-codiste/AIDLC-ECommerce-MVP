@@ -24,8 +24,6 @@ export default function ChatPage() {
   const streamingMsgIdRef = useRef<string | null>(null);
   const welcomeSentRef = useRef(false);
 
-  // Auth gate: if no in-memory access token, kick to /login.
-  // (The middleware checks the refresh cookie; we need the access token in memory to call the API.)
   useEffect(() => {
     if (!getAccessToken()) {
       router.replace('/login?returnTo=%2Fchat');
@@ -34,7 +32,6 @@ export default function ChatPage() {
     setAuthChecked(true);
   }, [router]);
 
-  // Restore session on mount
   useEffect(() => {
     if (!authChecked) return;
     const saved = loadSession();
@@ -43,14 +40,10 @@ export default function ChatPage() {
     }
   }, [authChecked]);
 
-  // Persist messages on change
   useEffect(() => {
-    if (state.messages.length > 0) {
-      saveSession(state.messages);
-    }
+    if (state.messages.length > 0) saveSession(state.messages);
   }, [state.messages]);
 
-  // Welcome message on first load — guarded against React StrictMode double-fire
   useEffect(() => {
     if (!authChecked) return;
     if (welcomeSentRef.current) return;
@@ -66,7 +59,6 @@ export default function ChatPage() {
     });
   }, [authChecked]);
 
-  // Disconnect SSE on unmount
   useEffect(() => {
     const sse = sseRef.current;
     return () => sse.disconnect();
@@ -105,39 +97,78 @@ export default function ChatPage() {
 
   const handleLogout = useCallback(async () => {
     sseRef.current.disconnect();
-    try {
-      await authLogout();
-    } catch {
-      // ignore — we'll clear local state anyway
-    }
+    try { await authLogout(); } catch { /* ignore */ }
     if (typeof window !== 'undefined') sessionStorage.removeItem('chat_messages');
     router.replace('/login');
   }, [router]);
 
+  const handlePromptClick = useCallback((prompt: string) => {
+    handleSubmit(prompt);
+  }, [handleSubmit]);
+
   if (!authChecked) {
-    return <div className="flex items-center justify-center h-screen text-gray-500">Loading…</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
+        <div className="text-gray-500 text-sm">Loading…</div>
+      </div>
+    );
   }
 
-  const user = getUser();
-
   return (
-    <div className="flex flex-col h-screen bg-white">
-      <header className="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-        <h1 className="text-base font-semibold text-gray-900">Chat</h1>
-        <div className="flex items-center gap-3 text-sm">
-          {user ? <span className="text-gray-500">Signed in</span> : null}
+    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+      {/* Header */}
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="mx-auto max-w-4xl px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center shadow-sm">
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
+              </svg>
+            </div>
+            <div>
+              <div className="text-base font-semibold text-gray-900 leading-tight">Codiste Commerce</div>
+              <div className="text-xs text-gray-500">AI-powered shopping assistant</div>
+            </div>
+          </div>
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded border border-gray-300 px-3 py-1 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="rounded-lg border border-gray-200 bg-white px-3.5 py-1.5 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             data-testid="logout-button"
           >
             Logout
           </button>
         </div>
       </header>
-      <MessageList messages={state.messages} streaming={state.streaming} />
-      <Composer disabled={state.composerDisabled} onSubmit={handleSubmit} />
+
+      {/* Message area + suggested prompts */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden mx-auto max-w-4xl w-full px-2 sm:px-6">
+          <MessageList messages={state.messages} streaming={state.streaming} />
+        </div>
+        {state.messages.length <= 1 && !state.streaming ? (
+          <div className="mx-auto max-w-4xl w-full px-2 sm:px-6 pb-2">
+            <div className="flex flex-wrap gap-2">
+              {['show me phones', 'compare iPhone 15 Pro and Samsung Galaxy S24', 'show me laptops', 'what categories do you have?'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => handlePromptClick(p)}
+                  className="text-xs rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Composer */}
+      <div className="border-t border-gray-200 bg-white">
+        <div className="mx-auto max-w-4xl">
+          <Composer disabled={state.composerDisabled} onSubmit={handleSubmit} />
+        </div>
+      </div>
     </div>
   );
 }

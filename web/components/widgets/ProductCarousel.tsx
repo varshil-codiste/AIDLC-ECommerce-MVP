@@ -1,17 +1,18 @@
-import Image from 'next/image';
 import type { WidgetIntent } from '@/lib/types/chat.types';
+import { ProductImage } from './ProductImage';
 
 interface ProductPreview {
   productId: string;
   title: string;
   priceCents: number;
   currency: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
 }
 
 interface ProductCarouselData {
   products: ProductPreview[];
   query?: string;
+  usedFallback?: boolean;
 }
 
 interface Props {
@@ -20,48 +21,55 @@ interface Props {
 }
 
 function formatCents(cents: number, currency: string): string {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency, minimumFractionDigits: 2 }).format(cents / 100);
+  try {
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency, minimumFractionDigits: 0 }).format(cents / 100);
+  } catch {
+    return `${currency} ${(cents / 100).toFixed(2)}`;
+  }
 }
 
 export function ProductCarousel({ data, onIntent }: Props) {
   const d = data as unknown as ProductCarouselData;
   const products = d.products ?? [];
 
-  if (products.length === 0) return null;
+  if (products.length === 0) {
+    return (
+      <div className="text-sm text-gray-600 italic">
+        No matches found{d.query ? ` for "${d.query}"` : ''}.
+      </div>
+    );
+  }
 
   return (
-    <div data-testid="product-carousel-root" className="space-y-2">
+    <div data-testid="product-carousel-root" className="space-y-3">
       {d.query ? (
-        <div className="text-xs text-gray-500 font-medium">Results for "{d.query}"</div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-gray-500">Results for</span>
+          <span className="font-semibold text-gray-900">&ldquo;{d.query}&rdquo;</span>
+          <span className="text-gray-400">·</span>
+          <span className="text-gray-500">{products.length} found</span>
+        </div>
       ) : null}
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {products.map((item, n) => (
           <button
             key={item.productId}
             data-testid={`product-carousel-item-${n}`}
-            className="flex-shrink-0 w-36 rounded border border-gray-200 p-2 text-left hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-900"
             onClick={() => onIntent?.({ intent: 'product.view', productId: item.productId })}
+            className="group rounded-xl border border-gray-200 bg-white p-3 text-left transition hover:border-indigo-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            {item.imageUrl ? (
-              <Image
-                src={item.imageUrl}
-                alt={item.title}
-                width={128}
-                height={96}
-                className="rounded object-cover w-full mb-2"
-              />
-            ) : (
-              <div className="w-full h-24 bg-gray-100 rounded mb-2 flex items-center justify-center text-gray-300 text-xs">
-                No image
-              </div>
-            )}
+            <ProductImage
+              src={item.imageUrl}
+              alt={item.title}
+              className="w-full h-28 mb-3"
+            />
             <div
               data-testid={`product-carousel-item-${n}-title`}
-              className="text-xs font-medium text-gray-900 leading-tight line-clamp-2"
+              className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2 mb-1 group-hover:text-indigo-700"
             >
               {item.title}
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">
+            <div className="text-sm font-bold text-gray-900">
               {formatCents(item.priceCents, item.currency)}
             </div>
           </button>
