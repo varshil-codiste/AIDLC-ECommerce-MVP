@@ -64,16 +64,59 @@ UI is themed after [Codiste](https://www.codiste.com/) — monochrome dark/light
 
 ## Local Development
 
+### 1. Clone and install
 ```bash
-# 1. Clone and install
 git clone https://github.com/varshil-codiste/AIDLC-ECommerce-MVP.git
 cd AIDLC-ECommerce-MVP
+pnpm install
+```
 
-# 2. Set up env
-cp .env.example .env               # edit as needed — defaults work for local dev
+### 2. Start Postgres + Redis
+```bash
+cd infra && docker compose up -d && cd ..
+```
 
-# 3. Start everything (Postgres + pgvector, Redis, API, Web)
-bash scripts/dev.sh
+### 3. Configure `api/.env` (REQUIRED — gitignored, won't exist on a fresh clone)
+
+```bash
+cp api/.env.example api/.env
+```
+
+Then edit `api/.env` and fill in these **four required values** (all others have working defaults):
+
+| Variable | What to put | How to get it |
+|---|---|---|
+| `JWT_PRIVATE_KEY_B64` | base64 of an RSA-2048 private key | see snippet below |
+| `JWT_PUBLIC_KEY_B64` | base64 of the matching public key | see snippet below |
+| `LLM_API_KEY` | `sk-ant-api03-...` | https://console.anthropic.com/settings/keys |
+| `LLM_PROVIDER_API_KEY` | same value as `LLM_API_KEY` | (alias used in some code paths) |
+
+**Generate dev JWT keys (one-liner):**
+```bash
+openssl genrsa -out /tmp/jwt-priv.pem 2048 \
+  && openssl rsa -in /tmp/jwt-priv.pem -pubout -out /tmp/jwt-pub.pem \
+  && echo "JWT_PRIVATE_KEY_B64=$(base64 -w0 /tmp/jwt-priv.pem)" \
+  && echo "JWT_PUBLIC_KEY_B64=$(base64 -w0 /tmp/jwt-pub.pem)"
+```
+Copy the two output lines into `api/.env`.
+
+### 4. Migrate + seed the database
+```bash
+cd api
+pnpm prisma generate
+pnpm prisma migrate deploy
+pnpm exec ts-node prisma/seed.ts
+cd ..
+```
+
+### 5. Start the API and Web
+
+```bash
+# Terminal 1 — API on :3001
+cd api && pnpm build && node dist/main.js
+
+# Terminal 2 — Web on :3000
+cd web && pnpm dev
 ```
 
 | Service | URL |
@@ -82,10 +125,26 @@ bash scripts/dev.sh
 | API health | http://localhost:3001/api/v1/health |
 | API (all routes) | http://localhost:3001/api/v1/ |
 
+### Troubleshooting — API won't start
+
+If `node dist/main.js` exits immediately, check the stderr output. Most common causes:
+
+| Error message | Cause | Fix |
+|---|---|---|
+| `Cannot find module '.../dist/main.js'` | Not built yet | `cd api && pnpm build` |
+| `Configuration key "JWT_PRIVATE_KEY_B64" does not exist` | `.env` missing or that key blank | Generate keys (see step 3 above), paste into `api/.env` |
+| `Configuration key "LLM_API_KEY" does not exist` | Anthropic key not set | Get key from console.anthropic.com, set BOTH `LLM_API_KEY` and `LLM_PROVIDER_API_KEY` |
+| `ECONNREFUSED 127.0.0.1:5432` | Postgres not running | `cd infra && docker compose up -d` |
+| `ECONNREFUSED 127.0.0.1:6379` | Redis not running | `cd infra && docker compose up -d` |
+| `relation "app.users" does not exist` | Migrations not run | `cd api && pnpm prisma migrate deploy` |
+| `@prisma/client did not initialize yet` | Prisma client not generated | `cd api && pnpm prisma generate` |
+| `EADDRINUSE :::3001` | Port 3001 already in use | `fuser -k 3001/tcp` then restart |
+| API starts but every chat returns "Routing failed" | Anthropic credit balance is $0 | Top up at console.anthropic.com → Billing |
+
 ### Seed data
 
 ```bash
-pnpm --filter api exec tsx prisma/seed.ts
+cd api && pnpm exec ts-node prisma/seed.ts
 ```
 
 Creates 3 users (admin / merchant / shopper), 4 categories, 8 products (16 variants), and a default shipping address for the shopper.
