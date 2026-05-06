@@ -50,6 +50,10 @@ export class AnthropicLlmProvider implements ILlmProvider {
     const response = await this.client.messages.create({
       model: this.modelName,
       max_tokens: params.budget.maxTokensOut,
+      // Determinism: temperature 0 collapses softmax to greedy decoding so the same
+      // prompt yields the same agent/tool/widget choice. Slight variation in wording
+      // can still occur due to tokenizer ties, but routing/tool selection is stable.
+      temperature: 0,
       system: params.systemPrompt,
       messages: [
         ...params.context.map((c) => ({

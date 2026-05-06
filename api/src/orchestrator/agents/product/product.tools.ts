@@ -18,11 +18,11 @@ export const PRODUCT_TOOLS: LlmTool[] = [
   },
   {
     name: 'product_compare',
-    description: 'Compare 2-3 active products side by side. Returns a product_comparison widget highlighting differing attributes. If more than 3 IDs provided, the first 3 are used and the agent surfaces an explanation.',
+    description: 'Compare 2-3 active products side by side. Returns a product_comparison widget highlighting differing attributes. Each item can be EITHER a product UUID OR a product NAME (e.g. "iPhone 15 Pro", "Samsung Galaxy S24") — names are resolved internally. Use this DIRECTLY for "compare X and Y" / "X vs Y" requests; do NOT call product_search first. If more than 3 items are provided, the first 3 are used.',
     parameters: {
       type: 'object',
       properties: {
-        productIds: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 10, description: 'UUIDs of products to compare; first 3 are used' },
+        productIds: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 10, description: 'List of product UUIDs OR product names; first 3 are used.' },
       },
       required: ['productIds'],
     },

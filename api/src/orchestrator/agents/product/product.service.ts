@@ -77,14 +77,30 @@ export class ProductService {
     return rest;
   }
 
-  async compareByIds(ids: string[]): Promise<ComparisonResult> {
-    if (ids.length < 2) throw new Error('product_compare.too_few');
-    const capped = ids.slice(0, 3);
+  async compareByIds(idsOrNames: string[]): Promise<ComparisonResult> {
+    if (idsOrNames.length < 2) throw new Error('product_compare.too_few');
+    const capped = idsOrNames.slice(0, 3);
+
+    // Resolve each entry: UUID format → use as id; otherwise look up by title (case-insensitive)
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const resolvedIds: string[] = [];
+    for (const item of capped) {
+      if (UUID.test(item)) {
+        resolvedIds.push(item);
+        continue;
+      }
+      // Lookup by name — try exact title match first, then ILIKE
+      let p = await this.prisma.product.findFirst({ where: { title: { equals: item, mode: 'insensitive' }, status: 'active' } });
+      if (!p) p = await this.prisma.product.findFirst({ where: { title: { contains: item, mode: 'insensitive' }, status: 'active' } });
+      if (p) resolvedIds.push(p.id);
+    }
+    if (resolvedIds.length < 2) throw new Error('product_compare.unresolved_names');
+
     const products = await this.prisma.product.findMany({
-      where: { id: { in: capped }, status: 'active' },
+      where: { id: { in: resolvedIds }, status: 'active' },
       include: { category: { select: { name: true } }, variants: { select: { attributes: true } } },
     });
-    const sorted = capped
+    const sorted = resolvedIds
       .map((id) => products.find((p) => p.id === id))
       .filter((p): p is NonNullable<typeof p> => p != null);
     const compareModels: ProductForCompare[] = sorted.map((p) => ({
