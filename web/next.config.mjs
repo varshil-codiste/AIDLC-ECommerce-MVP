@@ -31,8 +31,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // unsafe-eval required by webpack HMR in dev; removed in production
-              `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+              // unsafe-eval is required by:
+              //   - webpack HMR in dev
+              //   - AJV schema compilation at runtime in widget validators (prod)
+              // TODO(v2): pre-compile AJV schemas via ajv-cli to remove the prod
+              // unsafe-eval dependency.
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://placehold.co",
               `connect-src 'self' ${apiOrigin}`,
