@@ -28,8 +28,11 @@ COPY --from=build --chown=app:nodejs /app/api/dist ./dist
 COPY --from=build --chown=app:nodejs /app/api/node_modules ./node_modules
 COPY --chown=app:nodejs api/package.json ./
 COPY --chown=app:nodejs api/prisma ./prisma
+COPY --chown=app:nodejs api/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 USER app
 EXPOSE 3001
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -q -O- http://localhost:3001/api/v1/health || exit 1
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "dist/main.js"]

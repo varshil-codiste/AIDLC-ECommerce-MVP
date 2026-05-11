@@ -33,7 +33,9 @@ services:
     dockerfilePath: ./api/Dockerfile
     dockerContext: .
     healthCheckPath: /api/v1/health
-    preDeployCommand: ./scripts/render-pre-deploy.sh
+    # Note: preDeployCommand is paid-tier-only. On the free tier, the
+    # API's docker-entrypoint.sh runs migrations + extension setup on
+    # every container start. The CREATE statements are idempotent.
     envVars:
       - key: NODE_ENV
         value: production
