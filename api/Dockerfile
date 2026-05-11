@@ -18,6 +18,9 @@ COPY tsconfig.base.json ./
 COPY api ./api
 COPY shared ./shared
 WORKDIR /app/api
+# Generate Prisma client BEFORE compiling — the deps stage doesn't have
+# the schema, so the install-time postinstall couldn't generate it.
+RUN pnpm exec prisma generate --schema=./prisma/schema.prisma
 RUN pnpm run build
 
 FROM node:22-alpine AS runtime
