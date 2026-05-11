@@ -63,7 +63,7 @@ export function ProductCarousel({ data, onIntent }: Props) {
           <button
             key={item.productId}
             data-testid={`product-carousel-item-${n}`}
-            onClick={() => onIntent?.({ intent: 'product.view', productId: item.productId })}
+            onClick={() => onIntent?.({ intent: 'product.view', productId: item.productId, productTitle: item.title })}
             className="group relative rounded-2xl border border-neutral-200 bg-white p-4 text-left transition hover:border-neutral-900 hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.15)] focus:outline-none focus:ring-2 focus:ring-neutral-900"
           >
             <div className="flex items-start justify-between mb-3">

@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import type { ChatMessage } from '@/lib/types/chat.types';
+import type { ChatMessage, WidgetIntent } from '@/lib/types/chat.types';
 import { MessageBubble } from './MessageBubble';
 import { TypingIndicator } from './TypingIndicator';
 
 interface Props {
   messages: ChatMessage[];
   streaming: boolean;
+  onIntent?: (intent: WidgetIntent) => void;
 }
 
-export function MessageList({ messages, streaming }: Props) {
+export function MessageList({ messages, streaming, onIntent }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef(true);
   const listRef = useRef<HTMLDivElement>(null);
@@ -39,7 +40,7 @@ export function MessageList({ messages, streaming }: Props) {
       data-testid="message-list"
     >
       {messages.map((msg) => (
-        <MessageBubble key={msg.id} message={msg} />
+        <MessageBubble key={msg.id} message={msg} onIntent={onIntent} />
       ))}
       {streaming && <TypingIndicator />}
       <div ref={bottomRef} aria-hidden="true" />

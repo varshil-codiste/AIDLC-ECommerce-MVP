@@ -1,10 +1,11 @@
 import { clsx } from 'clsx';
-import type { ChatMessage } from '@/lib/types/chat.types';
+import type { ChatMessage, WidgetIntent } from '@/lib/types/chat.types';
 import { StreamingTokens } from './StreamingTokens';
 import { WidgetRenderer } from '../widgets/WidgetRenderer';
 
 interface Props {
   message: ChatMessage;
+  onIntent?: (intent: WidgetIntent) => void;
 }
 
 function AssistantAvatar() {
@@ -25,7 +26,7 @@ function UserAvatar() {
   );
 }
 
-export function MessageBubble({ message }: Props) {
+export function MessageBubble({ message, onIntent }: Props) {
   const isUser = message.role === 'user';
   const isWidget = message.type === 'widget' && message.widget;
   const isError = message.type === 'error';
@@ -50,7 +51,7 @@ export function MessageBubble({ message }: Props) {
         )}
       >
         {isWidget ? (
-          <WidgetRenderer widget={message.widget!} />
+          <WidgetRenderer widget={message.widget!} onIntent={onIntent} />
         ) : (
           <StreamingTokens content={message.content} streaming={message.streaming} />
         )}

@@ -7,7 +7,7 @@ import { SseClient } from '@/lib/sse-client';
 import { getAccessToken, getUser, logout as authLogout } from '@/lib/auth-service';
 import { MessageList } from '@/components/chat/MessageList';
 import { Composer } from '@/components/chat/Composer';
-import type { SseHandlers, WidgetPayload } from '@/lib/types/chat.types';
+import type { SseHandlers, WidgetPayload, WidgetIntent } from '@/lib/types/chat.types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -122,6 +122,40 @@ export default function ChatPage() {
     sseRef.current.connect(url, handlers);
   }, [router]);
 
+  // Convert widget button clicks into natural-language chat messages.
+  // The LLM already knows how to handle these; reusing the chat pipeline
+  // means the resulting widget refresh flows through the same SSE channel.
+  const handleIntent = useCallback((intent: WidgetIntent) => {
+    let message: string | null = null;
+    switch (intent.intent) {
+      case 'cart.update_quantity':
+        message = `set ${intent.productTitle} quantity to ${intent.quantity}`;
+        break;
+      case 'cart.remove':
+        message = `remove ${intent.productTitle} from my cart`;
+        break;
+      case 'cart.checkout':
+        message = 'checkout';
+        break;
+      case 'cart.clear':
+        message = 'clear my cart';
+        break;
+      case 'cart.add':
+        message = intent.productTitle ? `add ${intent.productTitle} to my cart` : null;
+        break;
+      case 'product.view':
+        message = intent.productTitle ? `tell me more about ${intent.productTitle}` : null;
+        break;
+      case 'payment.confirm':
+      case 'order.place':
+        message = 'place the order';
+        break;
+      default:
+        console.warn('Unhandled widget intent', intent);
+    }
+    if (message) handleSubmit(message);
+  }, [handleSubmit]);
+
   const handleLogout = useCallback(async () => {
     sseRef.current.disconnect();
     try { await authLogout(); } catch { /* ignore */ }
@@ -161,7 +195,7 @@ export default function ChatPage() {
       {/* Conversation */}
       <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 mx-auto max-w-5xl w-full px-3 sm:px-6 flex flex-col">
-          <MessageList messages={state.messages} streaming={state.streaming} />
+          <MessageList messages={state.messages} streaming={state.streaming} onIntent={handleIntent} />
         </div>
         {state.messages.length <= 1 && !state.streaming ? (
           <div className="mx-auto max-w-5xl w-full px-3 sm:px-6 pb-3">

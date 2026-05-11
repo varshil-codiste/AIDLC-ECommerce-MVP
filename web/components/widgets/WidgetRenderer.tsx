@@ -1,4 +1,4 @@
-import type { WidgetPayload } from '@/lib/types/chat.types';
+import type { WidgetPayload, WidgetIntent } from '@/lib/types/chat.types';
 import { validateWidgetPayload } from '@/widget-schemas';
 import { UnknownWidget } from './UnknownWidget';
 import { ProductCard } from './ProductCard';
@@ -18,7 +18,7 @@ import { OrderStatusUpdate } from './OrderStatusUpdate';
 import { AttentionSummary } from './AttentionSummary';
 import { ProductComparison } from './ProductComparison';
 
-type WidgetComponent = React.ComponentType<{ data: Record<string, unknown> }>;
+type WidgetComponent = React.ComponentType<{ data: Record<string, unknown>; onIntent?: (intent: WidgetIntent) => void }>;
 
 const WIDGET_REGISTRY: Record<string, WidgetComponent> = {
   product_card: ProductCard,
@@ -41,9 +41,10 @@ const WIDGET_REGISTRY: Record<string, WidgetComponent> = {
 
 interface Props {
   widget: WidgetPayload;
+  onIntent?: (intent: WidgetIntent) => void;
 }
 
-export function WidgetRenderer({ widget }: Props) {
+export function WidgetRenderer({ widget, onIntent }: Props) {
   const { type, data } = widget;
 
   const Component = WIDGET_REGISTRY[type];
@@ -55,5 +56,5 @@ export function WidgetRenderer({ widget }: Props) {
     return <UnknownWidget type={type} reason="schema.invalid" />;
   }
 
-  return <Component data={data} />;
+  return <Component data={data} onIntent={onIntent} />;
 }

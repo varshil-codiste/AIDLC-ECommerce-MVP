@@ -70,7 +70,7 @@ export function ProductCard({ data, onIntent }: Props) {
         <button
           data-testid="product-card-add-btn"
           className="w-full bg-gray-900 text-white rounded py-2 text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50"
-          onClick={() => onIntent?.({ intent: 'cart.add', variantId: d.variantId as string })}
+          onClick={() => onIntent?.({ intent: 'cart.add', variantId: d.variantId as string, productTitle: d.title as string })}
         >
           Add to cart
         </button>

@@ -79,9 +79,9 @@ export function CartSummary({ data, onIntent }: Props) {
                     aria-label={`Decrease quantity of ${item.title}`}
                     onClick={() => {
                       if (item.quantity <= 1) {
-                        onIntent?.({ intent: 'cart.remove', itemId: item.itemId });
+                        onIntent?.({ intent: 'cart.remove', itemId: item.itemId, productTitle: item.title });
                       } else {
-                        onIntent?.({ intent: 'cart.update_quantity', itemId: item.itemId, quantity: item.quantity - 1 });
+                        onIntent?.({ intent: 'cart.update_quantity', itemId: item.itemId, quantity: item.quantity - 1, productTitle: item.title });
                       }
                     }}
                   >
@@ -94,7 +94,7 @@ export function CartSummary({ data, onIntent }: Props) {
                     data-testid={`cart-summary-item-${n}-qty-inc`}
                     className="w-7 h-7 rounded-full border border-neutral-300 flex items-center justify-center text-neutral-700 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white transition focus:outline-none focus:ring-2 focus:ring-neutral-900"
                     aria-label={`Increase quantity of ${item.title}`}
-                    onClick={() => onIntent?.({ intent: 'cart.update_quantity', itemId: item.itemId, quantity: item.quantity + 1 })}
+                    onClick={() => onIntent?.({ intent: 'cart.update_quantity', itemId: item.itemId, quantity: item.quantity + 1, productTitle: item.title })}
                   >
                     <span className="text-sm">+</span>
                   </button>
