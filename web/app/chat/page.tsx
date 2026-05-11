@@ -129,10 +129,12 @@ export default function ChatPage() {
     let message: string | null = null;
     switch (intent.intent) {
       case 'cart.update_quantity':
-        message = `set ${intent.productTitle} quantity to ${intent.quantity}`;
+        // Pass itemId in the message so the cart agent calls cart_update_qty
+        // directly — no cart_get lookup step needed.
+        message = `set ${intent.productTitle} (cart item ${intent.itemId}) quantity to ${intent.quantity}`;
         break;
       case 'cart.remove':
-        message = `remove ${intent.productTitle} from my cart`;
+        message = `remove ${intent.productTitle} (cart item ${intent.itemId}) from my cart`;
         break;
       case 'cart.checkout':
         message = 'checkout';
