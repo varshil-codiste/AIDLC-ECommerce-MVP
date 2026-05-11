@@ -148,7 +148,8 @@ export default function ChatPage() {
         break;
       case 'payment.confirm':
       case 'order.place':
-        message = 'place the order';
+        // Include cartId so the checkout agent can definitively call checkout_pay
+        message = intent.cartId ? `pay for cart ${intent.cartId}` : 'place the order';
         break;
       default:
         console.warn('Unhandled widget intent', intent);

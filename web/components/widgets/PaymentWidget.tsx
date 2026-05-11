@@ -81,7 +81,7 @@ export function PaymentWidget({ data, onIntent }: Props) {
         disabled={!hasAddress}
         aria-disabled={!hasAddress}
         className="w-full bg-gray-900 text-white rounded py-2 text-sm font-medium hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
-        onClick={() => hasAddress && onIntent?.({ intent: 'cart.checkout', cartId })}
+        onClick={() => hasAddress && onIntent?.({ intent: 'payment.confirm', cartId })}
       >
         Pay Now
       </button>
