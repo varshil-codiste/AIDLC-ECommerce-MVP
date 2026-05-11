@@ -6,7 +6,7 @@
 # CREATE EXTENSION / CREATE SCHEMA are idempotent, so re-running is safe.
 set -e
 
-cd /app
+# WORKDIR is /app/api in the runtime image — paths are relative to that.
 
 echo "[entrypoint] Ensuring extensions + schemas exist..."
 npx prisma db execute --schema=./prisma/schema.prisma --stdin <<'SQL'

@@ -27,13 +27,14 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S app -G nodejs
-COPY --from=build --chown=app:nodejs /app/api/dist ./dist
-COPY --from=build --chown=app:nodejs /app/api/node_modules ./node_modules
-COPY --chown=app:nodejs api/package.json ./
-COPY --chown=app:nodejs api/prisma ./prisma
-COPY --chown=app:nodejs api/docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod +x ./docker-entrypoint.sh
+# Preserve monorepo layout so pnpm workspace symlinks resolve correctly:
+# api/node_modules contains symlinks pointing UP to /app/node_modules/.pnpm/...
+# Both must be present at the same relative depth or the symlinks dangle.
+COPY --from=build --chown=app:nodejs /app/node_modules ./node_modules
+COPY --from=build --chown=app:nodejs /app/api ./api
+RUN chmod +x ./api/docker-entrypoint.sh
 USER app
+WORKDIR /app/api
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD wget -q -O- http://localhost:3001/api/v1/health || exit 1
