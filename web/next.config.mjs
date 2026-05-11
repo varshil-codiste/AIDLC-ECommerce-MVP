@@ -2,6 +2,16 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Derive the API origin so CSP allows the deployed backend.
+// Falls back to localhost for local dev.
+const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+let apiOrigin = 'http://localhost:3001';
+try {
+  apiOrigin = new URL(apiUrl).origin;
+} catch {
+  // keep the localhost fallback
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -25,7 +35,7 @@ const nextConfig = {
               `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://placehold.co",
-              "connect-src 'self' http://localhost:3001",
+              `connect-src 'self' ${apiOrigin}`,
               "font-src 'self'",
               "frame-ancestors 'none'",
             ].join('; '),

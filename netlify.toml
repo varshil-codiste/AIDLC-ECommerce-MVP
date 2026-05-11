@@ -1,0 +1,19 @@
+# Netlify config for the Next.js web app.
+# Repo root is a pnpm monorepo (web/, api/, shared/) — build runs from root
+# so pnpm workspaces resolve correctly, then `--filter` builds only the web app.
+
+[build]
+  # Build from the repo root so pnpm workspaces resolve correctly
+  base    = "."
+  publish = "web/.next"
+  command = "corepack enable && corepack prepare pnpm@9.12.0 --activate && pnpm install --frozen-lockfile && pnpm --filter @ecommmer/web build"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+  # NEXT_PUBLIC_API_URL is set in the Netlify dashboard — do NOT hardcode here.
+  # Once you have the Render API URL, set it in:
+  # Site settings → Environment variables → NEXT_PUBLIC_API_URL = https://<your-render-api>.onrender.com
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
