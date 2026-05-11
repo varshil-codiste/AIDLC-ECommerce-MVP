@@ -3,6 +3,8 @@
 
 FROM node:22-alpine AS deps
 WORKDIR /app
+# OpenSSL is required by Prisma's native engine on Alpine
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY api/package.json ./api/
@@ -11,6 +13,7 @@ RUN pnpm install --filter @ecommmer/api --filter @ecommmer/shared --frozen-lockf
 
 FROM node:22-alpine AS build
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/api/node_modules ./api/node_modules
@@ -26,6 +29,7 @@ RUN pnpm run build
 FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
+RUN apk add --no-cache openssl libc6-compat
 RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S app -G nodejs
 # Preserve monorepo layout so pnpm workspace symlinks resolve correctly:
 # api/node_modules contains symlinks pointing UP to /app/node_modules/.pnpm/...
