@@ -42,7 +42,7 @@ export function DashboardDigest({ data }: Props) {
       aria-live="polite"
       className="space-y-2"
     >
-      <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Today's Overview</div>
+      <div className="text-xs text-gray-500 font-medium uppercase tracking-wide">Today&apos;s Overview</div>
       <div className="grid grid-cols-2 gap-2">
         <KpiTile
           testId="dashboard-digest-orders"
