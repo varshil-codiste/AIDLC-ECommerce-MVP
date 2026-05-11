@@ -3,7 +3,7 @@
 
 FROM node:22-alpine AS deps
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY web/package.json ./web/
 COPY shared/package.json ./shared/
@@ -11,7 +11,7 @@ RUN pnpm install --filter @ecommmer/web --filter @ecommmer/shared --frozen-lockf
 
 FROM node:22-alpine AS build
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/web/node_modules ./web/node_modules
 COPY tsconfig.base.json ./
