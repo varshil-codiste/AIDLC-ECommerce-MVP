@@ -141,7 +141,7 @@ export default function ChatPage() {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-50">
+    <div className="fixed inset-0 flex flex-col bg-neutral-50">
       {/* Dark Codiste-style header */}
       <header className="bg-neutral-900 text-white">
         <div className="mx-auto max-w-5xl px-6 py-3.5 flex items-center justify-between">
@@ -159,8 +159,8 @@ export default function ChatPage() {
       </header>
 
       {/* Conversation */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-hidden mx-auto max-w-5xl w-full px-3 sm:px-6">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 mx-auto max-w-5xl w-full px-3 sm:px-6 flex flex-col">
           <MessageList messages={state.messages} streaming={state.streaming} />
         </div>
         {state.messages.length <= 1 && !state.streaming ? (

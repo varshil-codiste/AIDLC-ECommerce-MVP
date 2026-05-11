@@ -40,7 +40,7 @@ export function Composer({ disabled, onSubmit }: Props) {
           aria-label="Type a message"
           placeholder={disabled ? 'Waiting for response…' : 'Ask me anything — products, cart, orders…'}
           className={clsx(
-            'w-full resize-none rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm outline-none transition',
+            'w-full resize-none rounded-2xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition',
             'focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900',
             'disabled:cursor-not-allowed disabled:bg-neutral-50 disabled:text-neutral-400',
           )}

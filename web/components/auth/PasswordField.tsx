@@ -25,7 +25,7 @@ export function PasswordField({ value, onChange, disabled }: PasswordFieldProps)
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           required
-          className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50"
+          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 pr-10 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-neutral-900 disabled:bg-gray-50 disabled:text-neutral-500"
           data-testid="login-form-password"
         />
         <button
