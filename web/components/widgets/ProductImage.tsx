@@ -36,8 +36,10 @@ export function ProductImage({ src, alt, className = 'w-full h-32' }: Props) {
   const useFallback = !src || errored;
   const { from, to } = pickPalette(alt);
 
+  const bgClass = useFallback ? `bg-gradient-to-br ${from} ${to}` : 'bg-neutral-100';
+
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${from} ${to} ${className}`}>
+    <div className={`relative overflow-hidden rounded-lg ${bgClass} ${className}`}>
       {!useFallback && src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -45,7 +47,7 @@ export function ProductImage({ src, alt, className = 'w-full h-32' }: Props) {
           alt={alt}
           loading="lazy"
           onError={() => setErrored(true)}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain"
         />
       ) : null}
       {useFallback ? (

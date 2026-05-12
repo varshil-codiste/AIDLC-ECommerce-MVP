@@ -80,7 +80,7 @@ export function ProductCarousel({ data, onIntent }: Props) {
             <ProductImage
               src={item.imageUrl}
               alt={item.title}
-              className="w-full h-24 mb-3"
+              className="w-full aspect-square mb-3"
             />
             <div
               data-testid={`product-carousel-item-${n}-title`}
