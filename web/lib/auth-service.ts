@@ -126,8 +126,28 @@ export function getAccessToken(): string | null {
   return session?.accessToken ?? null;
 }
 
-export function getUser(): { userId: string } | null {
-  return session ? { userId: session.userId } : null;
+export type UserRole = 'shopper' | 'merchant' | 'admin';
+
+function decodeRoleFromToken(token: string): UserRole | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const payload = JSON.parse(
+      typeof atob === 'function'
+        ? atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
+        : Buffer.from(parts[1], 'base64').toString('utf-8'),
+    ) as { role?: string };
+    if (payload.role === 'shopper' || payload.role === 'merchant' || payload.role === 'admin') {
+      return payload.role;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function getUser(): { userId: string; role: UserRole | null } | null {
+  return session ? { userId: session.userId, role: decodeRoleFromToken(session.accessToken) } : null;
 }
 
 async function getRefreshSession(): Promise<{

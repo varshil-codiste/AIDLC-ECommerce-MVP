@@ -46,10 +46,28 @@ function PillButton({ children, onClick, variant = 'dark', testId }: { children:
   );
 }
 
+const SUGGESTED_SHOPPER = [
+  'show me phones',
+  'compare iPhone 15 Pro and Samsung Galaxy S24',
+  'show me laptops under ₹1,00,000',
+  'what categories do you have?',
+];
+
+const SUGGESTED_MERCHANT = [
+  'what needs my attention today?',
+  'show me low-stock items',
+  'list my recent orders',
+  'add a new product',
+];
+
+const WELCOME_SHOPPER = "Hi — I'm your shopping assistant. What are you looking for today?";
+const WELCOME_MERCHANT = "Hi — I'm your store assistant. What would you like to manage today?";
+
 export default function ChatPage() {
   const router = useRouter();
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
   const [authChecked, setAuthChecked] = useState(false);
+  const [role, setRole] = useState<'shopper' | 'merchant' | 'admin' | null>(null);
   const sseRef = useRef(new SseClient());
   const streamingMsgIdRef = useRef<string | null>(null);
   const welcomeSentRef = useRef(false);
@@ -59,6 +77,7 @@ export default function ChatPage() {
       router.replace('/login?returnTo=%2Fchat');
       return;
     }
+    setRole(getUser()?.role ?? null);
     setAuthChecked(true);
   }, [router]);
 
@@ -80,10 +99,11 @@ export default function ChatPage() {
     const user = getUser();
     if (!user) return;
     welcomeSentRef.current = true;
+    const welcome = user.role === 'merchant' || user.role === 'admin' ? WELCOME_MERCHANT : WELCOME_SHOPPER;
     dispatch({
       type: 'ADD_ASSISTANT_TEXT',
       id: nextId(),
-      content: "Hi — I'm your shopping assistant. What are you looking for today?",
+      content: welcome,
     });
   }, [authChecked]);
 
@@ -170,12 +190,7 @@ export default function ChatPage() {
     return <div className="flex items-center justify-center h-screen bg-neutral-50 text-neutral-500 text-sm">Loading…</div>;
   }
 
-  const SUGGESTED = [
-    'show me phones',
-    'compare iPhone 15 Pro and Samsung Galaxy S24',
-    'show me laptops under ₹1,00,000',
-    'what categories do you have?',
-  ];
+  const SUGGESTED = role === 'merchant' || role === 'admin' ? SUGGESTED_MERCHANT : SUGGESTED_SHOPPER;
 
   return (
     <div className="fixed inset-0 flex flex-col bg-neutral-50">
