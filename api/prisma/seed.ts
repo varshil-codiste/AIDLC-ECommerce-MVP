@@ -56,7 +56,7 @@ const SEED_PRODUCTS = [
     ],
   },
   {
-    title: 'OnePlus 12',
+    title: 'Oppo K1',
     description: 'Flagship killer with Snapdragon 8 Gen 3, 6.82" LTPO AMOLED, 50MP Hasselblad camera',
     priceCents: 6499900,
     category: 'smartphones',
