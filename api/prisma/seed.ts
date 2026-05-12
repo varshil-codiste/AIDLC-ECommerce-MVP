@@ -27,7 +27,7 @@ const SEED_PRODUCTS = [
     description: 'Latest Samsung flagship with AI features, 6.2" FHD+ display, 50MP camera, Snapdragon 8 Gen 3',
     priceCents: 7999900,
     category: 'smartphones',
-    imageUrls: ['https://placehold.co/300x300?text=Samsung+Galaxy+S24'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/smartphones/samsung-galaxy-s10/1.webp'],
     variants: [
       { sku: 'SGS24-BLK-128', attributes: { color: 'Black', storage: '128GB' }, stock: 25 },
       { sku: 'SGS24-WHT-256', attributes: { color: 'White', storage: '256GB' }, stock: 12 },
@@ -38,7 +38,7 @@ const SEED_PRODUCTS = [
     description: "Apple's latest Pro model with titanium design, A17 Pro chip, 48MP main camera",
     priceCents: 13490000,
     category: 'smartphones',
-    imageUrls: ['https://placehold.co/300x300?text=iPhone+15+Pro'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/smartphones/iphone-13-pro/1.webp'],
     variants: [
       { sku: 'IP15P-BLK-128', attributes: { color: 'Black Titanium', storage: '128GB' }, stock: 10 },
       { sku: 'IP15P-WHT-256', attributes: { color: 'White Titanium', storage: '256GB' }, stock: 8 },
@@ -49,7 +49,7 @@ const SEED_PRODUCTS = [
     description: '6.1" Super Retina XDR, A15 Bionic chip, 12MP camera, excellent value flagship',
     priceCents: 7990000,
     category: 'smartphones',
-    imageUrls: ['https://placehold.co/300x300?text=iPhone+14'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/smartphones/iphone-x/1.webp'],
     variants: [
       { sku: 'IP14-BLK-128', attributes: { color: 'Black', storage: '128GB' }, stock: 40 },
       { sku: 'IP14-BLU-256', attributes: { color: 'Blue', storage: '256GB' }, stock: 20 },
@@ -60,7 +60,7 @@ const SEED_PRODUCTS = [
     description: 'Flagship killer with Snapdragon 8 Gen 3, 6.82" LTPO AMOLED, 50MP Hasselblad camera',
     priceCents: 6499900,
     category: 'smartphones',
-    imageUrls: ['https://placehold.co/300x300?text=OnePlus+12'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/smartphones/oppo-k1/1.webp'],
     variants: [
       { sku: 'OP12-BLK-256', attributes: { color: 'Silky Black', storage: '256GB' }, stock: 30 },
       { sku: 'OP12-GRN-256', attributes: { color: 'Flowy Emerald', storage: '256GB' }, stock: 15 },
@@ -71,7 +71,7 @@ const SEED_PRODUCTS = [
     description: 'Industry-leading noise cancelling headphones, 30-hour battery, multipoint connection',
     priceCents: 2990000,
     category: 'audio',
-    imageUrls: ['https://placehold.co/300x300?text=Sony+WH1000XM5'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/mobile-accessories/apple-airpods-max-silver/1.webp'],
     variants: [
       { sku: 'SNYWH5-BLK', attributes: { color: 'Black' }, stock: 50 },
       { sku: 'SNYWH5-SLV', attributes: { color: 'Silver' }, stock: 30 },
@@ -82,7 +82,7 @@ const SEED_PRODUCTS = [
     description: '13.6" Liquid Retina display, Apple M3 chip, 18-hour battery, fanless design',
     priceCents: 11490000,
     category: 'laptops',
-    imageUrls: ['https://placehold.co/300x300?text=MacBook+Air+M3'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/1.webp'],
     variants: [
       { sku: 'MBA-M3-8-256', attributes: { ram: '8GB', storage: '256GB', color: 'Midnight' }, stock: 20 },
       { sku: 'MBA-M3-16-512', attributes: { ram: '16GB', storage: '512GB', color: 'Silver' }, stock: 15 },
@@ -93,7 +93,7 @@ const SEED_PRODUCTS = [
     description: 'Premium braided USB-C to USB-C cable, supports 100W fast charging and data transfer',
     priceCents: 149900,
     category: 'accessories',
-    imageUrls: ['https://placehold.co/300x300?text=USB-C+Cable'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/mobile-accessories/apple-iphone-charger/1.webp'],
     variants: [
       { sku: 'USBC-1M-BLK', attributes: { color: 'Black', length: '1m' }, stock: 200 },
       { sku: 'USBC-2M-BLK', attributes: { color: 'Black', length: '2m' }, stock: 150 },
@@ -104,7 +104,7 @@ const SEED_PRODUCTS = [
     description: 'Pure Android experience, Google Tensor G3, best-in-class camera with AI features',
     priceCents: 7599900,
     category: 'smartphones',
-    imageUrls: ['https://placehold.co/300x300?text=Google+Pixel+8'],
+    imageUrls: ['https://cdn.dummyjson.com/product-images/smartphones/vivo-s1/1.webp'],
     variants: [
       { sku: 'GP8-HAZ-128', attributes: { color: 'Hazel', storage: '128GB' }, stock: 15 },
       { sku: 'GP8-OBS-256', attributes: { color: 'Obsidian', storage: '256GB' }, stock: 10 },

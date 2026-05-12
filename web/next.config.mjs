@@ -20,6 +20,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'https', hostname: 'cdn.dummyjson.com' },
     ],
   },
   async headers() {
@@ -38,7 +39,7 @@ const nextConfig = {
               // unsafe-eval dependency.
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https://placehold.co",
+              "img-src 'self' data: https://placehold.co https://cdn.dummyjson.com",
               `connect-src 'self' ${apiOrigin}`,
               "font-src 'self'",
               "frame-ancestors 'none'",
